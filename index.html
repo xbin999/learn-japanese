@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>日语表达记录同步</title>
+  <style>
+    /* 和纸暖调变量 */
+    :root {
+      --paper: #fdfcf8;
+      --ink: #3e2723;
+      --accent: #d7ccc8;
+      --shadow: rgba(62,39,35,.08);
+      --handwriting: 'Kalam', cursive;
+    }
+
+    /* 引入手写体（Google Fonts） */
+    @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--paper);
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d7ccc8' fill-opacity='.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      color: var(--ink);
+      font-family: 'Noto Sans SC', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem;
+    }
+
+    h1 {
+      font-family: var(--handwriting);
+      font-size: 2.2rem;
+      margin: 0 0 2rem;
+      letter-spacing: 1px;
+      color: var(--ink);
+    }
+
+    /* 输入区毛玻璃卡片 */
+    .glass-card {
+      background: rgba(255,255,255,.55);
+      backdrop-filter: blur(8px) saturate(180%);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px var(--shadow);
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 680px;
+      margin-bottom: 1.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 220px;
+      font-size: 1rem;
+      line-height: 1.6;
+      border: none;
+      outline: none;
+      resize: vertical;
+      background: transparent;
+      color: var(--ink);
+      font-family: 'Noto Sans SC', sans-serif;
+      padding: 0;
+      /* 行号装饰 */
+      background-image: linear-gradient(to right, var(--accent) 0, var(--accent) 38px, transparent 38px);
+      background-attachment: local;
+      padding-left: 48px;
+      tab-size: 4;
+    }
+
+    textarea:focus {
+      box-shadow: inset 0 0 0 2px var(--accent);
+      border-radius: 8px;
+    }
+
+    /* 按钮组 */
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 24px;
+      padding: .6rem 1.4rem;
+      font-size: 1rem;
+      font-weight: 700;
+      transition: all .3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .primary {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--shadow);
+    }
+
+    .secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 2px solid var(--accent);
+    }
+
+    .secondary:hover {
+      background: var(--accent);
+    }
+
+    .success {
+      background: #4caf50;
+      color: white;
+    }
+
+    .success:hover {
+      background: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--shadow);
+    }
+
+    .image-generate {
+      background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+      color: white;
+    }
+
+    .image-generate:hover {
+      background: linear-gradient(45deg, #ff5252, #ff7b3d);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--shadow);
+    }
+
+    .image-generate:disabled {
+      background: #cccccc;
+      color: #666666;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* 预览便签贴 */
+    .note {
+      background: linear-gradient(135deg, #fff9c4 0%, #fff3a0 100%);
+      border: 1px solid rgba(255,224,130,.3);
+      border-radius: 8px 16px 16px 8px;
+      box-shadow: 0 4px 12px var(--shadow);
+      padding: 1.2rem 1.5rem;
+      width: 100%;
+      max-width: 680px;
+      font-size: .95rem;
+      line-height: 1.7;
+      color: var(--ink);
+      position: relative;
+      animation: fadeIn .6s ease forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 小标题手写风 */
+    h2 {
+      font-family: var(--handwriting);
+      font-size: 1.4rem;
+      margin: 2rem 0 .6rem;
+      color: var(--ink);
+    }
+
+    /* 按钮墨迹扩散 */
+    button::after {
+      content: '';
+      position: absolute;
+      inset: 50%;
+      width: 0; height: 0;
+      border-radius: 50%;
+      background: rgba(0,0,0,.08);
+      transition: width .4s ease, height .4s ease, inset .4s ease;
+    }
+
+    button:hover::after {
+      width: 120%; height: 120%;
+      inset: -10%;
+    }
+
+    /* 烟花容器 */
+    #fireworks {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .spark {
+      position: absolute;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: #ffcc00;
+      animation: pop .6s ease-out forwards;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1) translate(0,0); opacity: 1; }
+      100% { transform: scale(0) translate(var(--x), var(--y)); opacity: 0; }
+    }
+
+    /* 响应式微调 */
+    @media (max-width: 600px) {
+      body { padding: 2rem 1rem; }
+      h1 { font-size: 1.8rem; }
+      .glass-card { padding: 1rem; }
+      textarea { height: 180px; }
+    }
+
+    /* 字体降级兜底 */
+    @font-face {
+      font-family: 'Kalam Fallback';
+      src: local('Comic Sans MS'); /* 最接近手写的中文字体 */
+      unicode-range: U+4E00-9FFF;
+    }
+    </style>
+</head>
+<body>
+  <h1>📓 日语表达记录</h1>
+  <div class="glass-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+      <small style="color: var(--ink); opacity: 0.7;">💡 提示：Ctrl+A 全选，或点击右上角清除按钮</small>
+      <button id="clearBtn" class="secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">清除</button>
+    </div>
+    <textarea id="input" placeholder="标题：…
+主题：…
+——进化过程——
+V1: …"></textarea>
+    <div class="actions">
+      <button id="parseBtn" class="primary">解析</button>
+      <button id="syncBtn" class="secondary" disabled>同步到 Notion</button>
+    </div>
+    
+    <!-- 风格选择与生成区域 -->
+    <div id="generationArea" style="margin-top: 1.5rem; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 1.5rem; display: none;">
+      <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1.5rem;">
+        <span style="font-weight: 700; color: var(--ink);">视觉风格:</span>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+          <input type="radio" name="cardStyle" value="linear" checked> 
+          <span>Linear (极简) <span style="font-size: 0.8em; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px;">推荐</span></span>
+        </label>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+          <input type="radio" name="cardStyle" value="knowledge"> 
+          <span>Knowledge (知识)</span>
+        </label>
+      </div>
+      <button id="generateImageBtn" class="image-generate" style="width: 100%;">✨ 生成小红书分享图片</button>
+    </div>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 .6rem;">
+    <h2 style="margin: 0;">便签预览</h2>
+    <button id="copyPreviewBtn" class="secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; display: none;">复制文本</button>
+  </div>
+  <div id="preview" class="note">（解析结果会出现在这里）</div>
+  <div id="syncResult" class="note">（同步结果会出现在这里）</div>
+  <div id="imageResult" class="note" style="display: none;">
+    <div id="imageStatus">（图片生成结果会出现在这里）</div>
+    <div id="imagePreview" style="margin-top: 1rem; text-align: center;"></div>
+    <div id="saveAllCards" style="margin-top: 1rem; text-align: center;">
+      <button id="saveAllBtn" class="success" style="display: none;">保存所有卡片</button>
+    </div>
+  </div>
+  <div id="fireworks"></div>
+
+  <script type="module">
+    import { parseText } from './parse.js';
+    import { WORKER_URL } from './config.js';
+    import { generateAllCards, downloadMultipleImages, downloadImage } from './image-generator.js';
+
+    const input = document.getElementById('input');
+    const preview = document.getElementById('preview');
+    const syncResult = document.getElementById('syncResult');
+    const imageResult = document.getElementById('imageResult');
+    const imageStatus = document.getElementById('imageStatus');
+    const imagePreview = document.getElementById('imagePreview');
+    const parseBtn = document.getElementById('parseBtn');
+    const syncBtn = document.getElementById('syncBtn');
+    const generateImageBtn = document.getElementById('generateImageBtn');
+    const generationArea = document.getElementById('generationArea');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyPreviewBtn = document.getElementById('copyPreviewBtn');
+
+    let lastData = null; // 保存最新解析结果
+
+    // 清除按钮功能
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      input.focus();
+      preview.textContent = '（解析结果会出现在这里）';
+      syncResult.textContent = '（同步结果会出现在这里）';
+      imageResult.style.display = 'none';
+      syncBtn.disabled = true;
+      generationArea.style.display = 'none';
+      copyPreviewBtn.style.display = 'none';
+      lastData = null;
+    });
+
+    // 复制便签预览功能
+    copyPreviewBtn.addEventListener('click', () => {
+      const range = document.createRange();
+      range.selectNode(preview);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      try {
+        document.execCommand('copy');
+        const originalText = copyPreviewBtn.textContent;
+        copyPreviewBtn.textContent = '已复制！';
+        setTimeout(() => {
+          copyPreviewBtn.textContent = originalText;
+        }, 2000);
+      } catch (err) {
+        console.error('复制失败', err);
+      }
+      window.getSelection().removeAllRanges();
+    });
+
+    // 全选功能 (Ctrl+A)
+    input.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'a') {
+        e.preventDefault();
+        input.select();
+      }
+    });
+
+    parseBtn.addEventListener('click', () => {
+      const raw = input.value.trim();
+      if (!raw) return;
+      lastData = parseText(raw);
+      console.log('解析结果:', lastData);
+      
+      // 格式化显示解析结果，包括新字段
+      let previewHTML = '<div style="font-family: monospace; font-size: 14px; line-height: 1.4;">';
+      
+      // 基本信息
+      previewHTML += '<div style="margin-bottom: 15px;"><strong>📋 基本信息</strong><br>';
+      previewHTML += `标题: ${lastData.标题 || '(空)'}<br>`;
+      previewHTML += `主题: ${lastData.主题 || '(空)'}<br>`;
+      previewHTML += `我想表达: ${lastData.我想表达 || '(空)'}<br>`;
+      previewHTML += `分享标题: ${lastData.分享标题 || '(空)'}<br>`;
+      previewHTML += `学习总结: ${lastData.学习总结 || '(空)'}</div>`;
+      
+      // 进化过程
+      previewHTML += '<div style="margin-bottom: 15px;"><strong>🔄 进化过程</strong><br>';
+      previewHTML += `<pre style="margin: 5px 0; white-space: pre-wrap;">${lastData.进化过程 || '(空)'}</pre></div>`;
+      
+      // 最终定稿
+      previewHTML += '<div style="margin-bottom: 15px;"><strong>📝 最终定稿</strong><br>';
+      previewHTML += `<pre style="margin: 5px 0; white-space: pre-wrap;">${lastData.最终定稿 || '(空)'}</pre></div>`;
+      
+      // 核心结构
+      previewHTML += '<div style="margin-bottom: 15px;"><strong>📐 核心结构</strong><br>';
+      previewHTML += `<pre style="margin: 5px 0; white-space: pre-wrap;">${lastData.本次核心结构 || '(空)'}</pre></div>`;
+      
+      // 表达升级点
+      previewHTML += '<div style="margin-bottom: 15px;"><strong>🎯 表达升级点</strong><br>';
+      previewHTML += `<pre style="margin: 5px 0; white-space: pre-wrap;">${lastData.表达升级点 || '(空)'}</pre></div>`;
+      
+      // 错误记录详情
+      if (lastData.错误记录.length > 0) {
+        previewHTML += '<div style="margin-bottom: 15px;"><strong>❌ 错误记录</strong><br>';
+        lastData.错误记录.forEach((error, index) => {
+          previewHTML += `<div style="background: rgba(255,235,238,0.5); padding: 8px; margin: 5px 0; border-radius: 6px; border-left: 3px solid #ff5252;">`;
+          previewHTML += `<strong>${error.错误名称 || '错误' + (index + 1)}</strong><br>`;
+          previewHTML += `<small style="color: #666;">${error.典型错误说明 || ''}</small><br>`;
+          if (error.正确表达模式) {
+            previewHTML += `<small style="color: #2e7d32;">✓ ${error.正确表达模式}</small>`;
+          }
+          previewHTML += '</div>';
+        });
+        previewHTML += '</div>';
+      }
+      
+      // 生词详情
+      if (lastData.生词.length > 0) {
+        previewHTML += '<div style="margin-bottom: 15px;"><strong>📚 生词</strong><br>';
+        lastData.生词.forEach((vocab, index) => {
+          previewHTML += `<div style="background: rgba(232,245,232,0.5); padding: 8px; margin: 5px 0; border-radius: 6px; border-left: 3px solid #4caf50;">`;
+          previewHTML += `<strong>${vocab.词汇 || ''}</strong> `;
+          if (vocab.读音) {
+            previewHTML += `<small style="color: #666;">(${vocab.读音})</small>`;
+          }
+          previewHTML += '<br>';
+          if (vocab.中文解释) {
+            previewHTML += `<small>${vocab.中文解释}</small><br>`;
+          }
+          if (vocab.例句) {
+            previewHTML += `<small style="color: #555;">例: ${vocab.例句}</small>`;
+          }
+          previewHTML += '</div>';
+        });
+        previewHTML += '</div>';
+      }
+      
+      previewHTML += '</div>';
+      
+      preview.innerHTML = previewHTML;
+      syncBtn.disabled = false;
+      generationArea.style.display = 'block';
+      copyPreviewBtn.style.display = 'block';
+      syncResult.textContent = '';
+      imageResult.style.display = 'none';
+      imagePreview.innerHTML = '';
+    });
+
+    syncBtn.addEventListener('click', async () => {
+      if (!lastData) return;
+      syncBtn.disabled = true;
+      syncResult.textContent = '正在同步…';
+      try {
+        const res = await fetch(`${WORKER_URL}/sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(lastData)
+        });
+        const json = await res.json();
+        syncResult.textContent = json.ok ? '✅ 同步成功！' : `❌ 同步失败：${json.error}`;
+        if (json.ok) fireworks();
+      } catch (err) {
+        syncResult.textContent = `❌ 网络错误：${err.message}`;
+      } finally {
+        syncBtn.disabled = false;
+      }
+    });
+
+    // 小红书图片生成功能（基于字段映射）
+    let currentCardBlobs = null; // 保存当前生成的卡片
+    let previewUrls = []; // 保存当前预览的URL，以便清理
+    
+    generateImageBtn.addEventListener('click', async () => {
+      if (!lastData) return;
+      
+      // 获取选择的风格
+      const selectedStyle = document.querySelector('input[name="cardStyle"]:checked').value;
+      
+      generateImageBtn.disabled = true;
+      generateImageBtn.textContent = '🎨 正在生成...';
+      imageResult.style.display = 'block';
+      imageStatus.textContent = `🎨 正在生成 ${selectedStyle === 'linear' ? 'Linear' : 'Knowledge'} 风格图片（4张）…`;
+      imagePreview.innerHTML = '';
+      document.getElementById('saveAllBtn').style.display = 'none';
+      
+      // 清理旧的URL
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      previewUrls = [];
+      
+      try {
+        // 生成所有4张卡片
+        const cardBlobs = await generateAllCards(lastData, selectedStyle);
+        currentCardBlobs = cardBlobs;
+        
+        // 显示所有4张卡片预览
+        const previewContainer = document.createElement('div');
+        previewContainer.style.display = 'flex';
+        previewContainer.style.flexWrap = 'nowrap';
+        previewContainer.style.overflowX = 'auto';
+        previewContainer.style.justifyContent = 'flex-start';
+        previewContainer.style.gap = '15px';
+        previewContainer.style.marginTop = '20px';
+        previewContainer.style.paddingBottom = '15px'; // 为滚动条留出空间
+        
+        cardBlobs.forEach((blob, index) => {
+          const cardDiv = document.createElement('div');
+          cardDiv.style.textAlign = 'center';
+          cardDiv.style.margin = '0';
+          cardDiv.style.flexShrink = '0'; // 防止卡片被压缩
+          
+          const img = document.createElement('img');
+          const previewUrl = URL.createObjectURL(blob);
+          previewUrls.push(previewUrl);
+          img.src = previewUrl;
+          img.style.maxWidth = '180px';
+          img.style.maxHeight = '240px';
+          img.style.borderRadius = '8px';
+          img.style.boxShadow = '0 4px 12px var(--shadow)';
+          img.style.cursor = 'pointer';
+          img.title = `卡片 ${index + 1} (点击保存，右键复制)`;
+          
+          // 点击可以单独下载单张卡片
+          img.addEventListener('click', () => {
+            const title = lastData.标题 || 'japanese-expression';
+            const safeTitle = title.replace(/[^\u4e00-\u9fa5a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF]/g, '_');
+            const date = new Date().toISOString().split('T')[0];
+            const filename = `${date}_${safeTitle}_卡片${index + 1}.png`; // 需求要求PNG
+            downloadImage(blob, filename);
+          });
+          
+          const label = document.createElement('p');
+          label.textContent = `卡片 ${index + 1}`;
+          label.style.margin = '5px 0 0 0';
+          label.style.fontSize = '12px';
+          label.style.color = '#666';
+          
+          cardDiv.appendChild(img);
+          cardDiv.appendChild(label);
+          previewContainer.appendChild(cardDiv);
+        });
+        
+        imagePreview.appendChild(previewContainer);
+        
+        imageStatus.textContent = '✅ 4张卡片生成成功！点击卡片可单独下载，或点击下方按钮保存所有。';
+        
+        // 显示保存所有按钮
+        document.getElementById('saveAllBtn').style.display = 'inline-block';
+        
+      } catch (err) {
+        imageStatus.textContent = `❌ 图片生成失败：${err.message}`;
+        console.error('图片生成错误:', err);
+      } finally {
+        generateImageBtn.disabled = false;
+        generateImageBtn.textContent = '✨ 生成小红书分享图片';
+      }
+    });
+    
+    // 保存所有卡片按钮
+    document.getElementById('saveAllBtn').addEventListener('click', () => {
+      console.log('保存所有卡片按钮被点击');
+      console.log('currentCardBlobs:', currentCardBlobs);
+      console.log('lastData:', lastData);
+      
+      if (!currentCardBlobs || !lastData) {
+        console.log('条件不满足，不执行保存');
+        return;
+      }
+      
+      console.log('开始保存所有卡片');
+      const title = lastData.标题 || 'japanese-expression';
+      const safeTitle = title.replace(/[^\u4e00-\u9fa5a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF]/g, '_');
+      const date = new Date().toISOString().split('T')[0];
+      
+      console.log(`准备保存 ${currentCardBlobs.length} 张卡片`);
+      
+      currentCardBlobs.forEach((blob, index) => {
+        const filename = `${date}_${safeTitle}_卡片${index + 1}.png`;
+        console.log(`保存卡片 ${index + 1}: ${filename}`);
+        setTimeout(() => {
+          downloadImage(blob, filename);
+        }, index * 800); // 错开下载时间，增加延迟以避免浏览器阻止
+      });
+      
+      imageStatus.textContent = '✅ 所有卡片已保存！';
+    });
+  </script>
+  <!-- 引入html2canvas库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    // 小烟花庆祝
+    function fireworks() {
+      const fw = document.getElementById('fireworks');
+      const colors = ['#ffcc00','#ff6b6b','#4ecdc4','#45b7d1'];
+      for (let i = 0; i < 30; i++) {
+        const s = document.createElement('div');
+        s.className = 'spark';
+        s.style.left = (innerWidth/2 + (Math.random()-.5)*200) + 'px';
+        s.style.top = (innerHeight/2 + (Math.random()-.5)*200) + 'px';
+        s.style.background = colors[i % colors.length];
+        s.style.setProperty('--x', (Math.random()-.5)*200 + 'px');
+        s.style.setProperty('--y', (Math.random()-.5)*200 + 'px');
+        fw.appendChild(s);
+        setTimeout(() => s.remove(), 600);
+      }
+    }
+  </script>
+</body>
+</html>

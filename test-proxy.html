@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>代理接口测试</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #fdfcf8;
+            color: #3e2723;
+        }
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        button {
+            background: linear-gradient(45deg, #4caf50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .success {
+            color: #4caf50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 代理接口测试</h1>
+    
+    <div class="test-section">
+        <h2>🧪 步骤1: 测试代理接口连通性</h2>
+        <p>测试本地代理接口是否能正常访问</p>
+        <button id="testConnectionBtn">测试连接</button>
+        <div id="connectionResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎨 步骤2: 测试图片生成代理</h2>
+        <p>通过代理接口生成图片</p>
+        <button id="testProxyImageBtn" disabled>测试代理图片生成</button>
+        <div id="proxyImageResult" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const testConnectionBtn = document.getElementById('testConnectionBtn');
+        const testProxyImageBtn = document.getElementById('testProxyImageBtn');
+        const connectionResult = document.getElementById('connectionResult');
+        const proxyImageResult = document.getElementById('proxyImageResult');
+
+        // 测试代理接口连通性
+        testConnectionBtn.addEventListener('click', async () => {
+            try {
+                testConnectionBtn.disabled = true;
+                connectionResult.style.display = 'block';
+                connectionResult.className = 'result loading';
+                connectionResult.textContent = '正在测试代理接口连接...';
+
+                // 发送一个OPTIONS请求测试CORS
+                const response = await fetch('http://localhost:8787/generate-image', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('连接测试响应:', response.status, response.statusText);
+                
+                if (response.ok) {
+                    connectionResult.className = 'result success';
+                    connectionResult.textContent = `✅ 代理接口连接成功！\n状态码: ${response.status}\n可以开始测试图片生成。`;
+                    testProxyImageBtn.disabled = false;
+                } else {
+                    connectionResult.className = 'result error';
+                    connectionResult.textContent = `❌ 代理接口连接失败\n状态码: ${response.status}\n${response.statusText}`;
+                }
+
+            } catch (error) {
+                connectionResult.className = 'result error';
+                connectionResult.textContent = `❌ 代理接口连接错误\n错误信息: ${error.message}\n\n请检查:\n• Cloudflare Worker是否在运行\n• 端口8787是否被占用\n• 网络连接是否正常`;
+                console.error('连接测试错误:', error);
+            } finally {
+                testConnectionBtn.disabled = false;
+            }
+        });
+
+        // 测试代理图片生成
+        testProxyImageBtn.addEventListener('click', async () => {
+            try {
+                testProxyImageBtn.disabled = true;
+                proxyImageResult.style.display = 'block';
+                proxyImageResult.className = 'result loading';
+                proxyImageResult.textContent = '🎨 正在通过代理接口生成图片...';
+
+                const testPrompt = 'A simple test image with Japanese text: こんにちは';
+                
+                const response = await fetch('http://localhost:8787/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: testPrompt,
+                        aspect_ratio: '3:4'
+                    })
+                });
+
+                console.log('代理图片生成响应:', response.status, response.statusText);
+                console.log('响应头:', Object.fromEntries(response.headers.entries()));
+
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    console.log('内容类型:', contentType);
+
+                    if (contentType && contentType.includes('image')) {
+                        const blob = await response.blob();
+                        proxyImageResult.className = 'result success';
+                        proxyImageResult.textContent = `✅ 代理图片生成成功！\n图片大小: ${(blob.size / 1024).toFixed(2)} KB\n文件类型: ${blob.type}\n\n代理接口工作正常！`;
+                    } else {
+                        const text = await response.text();
+                        proxyImageResult.className = 'result error';
+                        proxyImageResult.textContent = `❌ 响应不是图片类型\n内容类型: ${contentType}\n响应内容: ${text.substring(0, 200)}`;
+                    }
+                } else {
+                    const errorText = await response.text();
+                    proxyImageResult.className = 'result error';
+                    proxyImageResult.textContent = `❌ 代理图片生成失败\n状态码: ${response.status}\n错误信息: ${errorText}`;
+                }
+
+            } catch (error) {
+                proxyImageResult.className = 'result error';
+                proxyImageResult.textContent = `❌ 代理图片生成错误\n错误信息: ${error.message}\n\n请检查浏览器控制台获取详细信息。`;
+                console.error('代理图片生成错误:', error);
+            } finally {
+                testProxyImageBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

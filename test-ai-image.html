@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>新图片生成功能测试（字段映射版）</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #fdfcf8;
+            color: #3e2723;
+        }
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        button {
+            background: linear-gradient(45deg, #4caf50, #66bb6a);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+        .preview {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .preview img {
+            max-width: 200px;
+            max-height: 267px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin: 5px;
+        }
+        .feature-highlight {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-left: 4px solid #2196f3;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 新图片生成功能测试（字段映射版）</h1>
+    
+    <div class="feature-highlight">
+        <strong>✨ 新功能特点：</strong>
+        <ul>
+            <li>基于字段映射，无需AI API调用</li>
+            <li>生成速度更快（< 2秒）</li>
+            <li>结果稳定可控</li>
+            <li>一次生成4张小红书卡片</li>
+            <li>遵循需求文档的卡片结构</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h3>🧪 测试1: 生成单张卡片（封面）</h3>
+        <p>测试生成第一张卡片，验证基本功能</p>
+        <button onclick="testSingleCard()">生成封面卡片</button>
+        <div id="result1" class="result" style="display:none;"></div>
+        <div id="preview1" class="preview"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🧪 测试2: 生成所有4张卡片</h3>
+        <p>批量生成4张小红书卡片，测试完整流程</p>
+        <button onclick="testAllCards()">生成4张卡片</button>
+        <button onclick="downloadAllCards()" id="downloadBtn" disabled>下载所有卡片</button>
+        <div id="result2" class="result" style="display:none;"></div>
+        <div id="preview2" class="preview"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🧪 测试3: 字段解析验证</h3>
+        <p>验证进化过程和标题解析功能</p>
+        <button onclick="testFieldParsing()">测试字段解析</button>
+        <div id="result3" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- 引入html2canvas库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- 引入新的图片生成器 -->
+    <script type="module">
+        import { generateCardImage, generateAllCards, downloadMultipleImages } from './image-generator.js';
+        
+        // 测试数据
+        const testData = {
+            标题: "2026-03-03 感受表达｜娘と楽しい朝ジョギング",
+            主题: "感受表达",
+            最终定稿: "今朝は娘と一緒にジョギングをしながら、学校のことや最近感じていることについてゆっくり話す時間を持てました。とても穏やかな朝でした。",
+            进化过程: "V1：今朝は娘とジョギングしました。そして、たくさん話しました。\nV2：今朝は娘と一緒にジョギングをして、そのあと色々なことを話しました。\nV3：今朝は娘と一緒にジョギングをしながら、学校のことや最近感じていることについてゆっくり話しました。",
+            本次核心结构: "1. 〜しながら（动作并行）\n2. 〜について（话题展开）\n3. 抽象感受表达（穏やかな朝）",
+            表达升级点: "1. 从简单并列句升级为动作并行结构\n2. 从「たくさん話しました」升级为具体话题展开\n3. 加入情绪性总结句，提高自然度",
+            错误记录: [],
+            生词: [],
+            分享标题: "日语句子别老用「そして」｜一个结构让表达瞬间自然"
+        };
+
+        let currentBlobs = null;
+
+        // 测试函数
+        window.testSingleCard = async function() {
+            const result = document.getElementById('result1');
+            const preview = document.getElementById('preview1');
+            
+            result.style.display = 'block';
+            result.className = 'result loading';
+            result.textContent = '正在生成封面卡片...';
+            preview.innerHTML = '';
+            
+            try {
+                const startTime = Date.now();
+                const blob = await generateCardImage(testData, 1);
+                const endTime = Date.now();
+                
+                result.className = 'result success';
+                result.textContent = `✅ 封面卡片生成成功！\n大小: ${(blob.size / 1024).toFixed(2)} KB\n耗时: ${endTime - startTime}ms`;
+                
+                const url = URL.createObjectURL(blob);
+                const img = document.createElement('img');
+                img.src = url;
+                img.title = '封面卡片预览';
+                preview.appendChild(img);
+                
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
+                
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 生成失败: ${error.message}`;
+            }
+        };
+
+        window.testAllCards = async function() {
+            const result = document.getElementById('result2');
+            const preview = document.getElementById('preview2');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            result.style.display = 'block';
+            result.className = 'result loading';
+            result.textContent = '正在生成4张卡片，请稍候...';
+            preview.innerHTML = '';
+            downloadBtn.disabled = true;
+            
+            try {
+                const startTime = Date.now();
+                const blobs = await generateAllCards(testData);
+                const endTime = Date.now();
+                currentBlobs = blobs;
+                
+                result.className = 'result success';
+                result.textContent = `✅ 成功生成 ${blobs.length} 张卡片！\n总耗时: ${endTime - startTime}ms\n平均每张: ${((endTime - startTime) / blobs.length).toFixed(0)}ms`;
+                
+                // 显示前两张预览
+                for (let i = 0; i < Math.min(2, blobs.length); i++) {
+                    const url = URL.createObjectURL(blobs[i]);
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.title = `卡片 ${i + 1}`;
+                    preview.appendChild(img);
+                    
+                    setTimeout(() => URL.revokeObjectURL(url), 5000);
+                }
+                
+                if (blobs.length > 2) {
+                    const info = document.createElement('p');
+                    info.textContent = `(显示前2张预览，共${blobs.length}张)`;
+                    info.style.color = '#666';
+                    info.style.fontSize = '12px';
+                    preview.appendChild(info);
+                }
+                
+                downloadBtn.disabled = false;
+                
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 生成失败: ${error.message}`;
+            }
+        };
+
+        window.downloadAllCards = function() {
+            if (!currentBlobs) return;
+            
+            const title = testData.标题 || 'test';
+            const safeTitle = title.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '_');
+            
+            downloadMultipleImages(currentBlobs, safeTitle);
+            
+            const result = document.getElementById('result2');
+            result.textContent += '\n✅ 下载已开始！';
+        };
+
+        window.testFieldParsing = function() {
+            const result = document.getElementById('result3');
+            
+            result.style.display = 'block';
+            result.className = 'result';
+            
+            try {
+                // 测试进化过程解析
+                const evolution = testData.进化过程;
+                const v1Match = evolution.match(/V1：(.+)/);
+                const v3Match = evolution.match(/V3：(.+)/);
+                
+                // 测试分享标题解析
+                const shareTitle = testData.分享标题;
+                const dayMatch = shareTitle.match(/Day\s*(\d+)/i);
+                const titleParts = shareTitle.split('｜');
+                
+                let output = '📊 字段解析结果:\n\n';
+                output += '🔄 进化过程:\n';
+                output += `  V1: ${v1Match ? v1Match[1].trim().substring(0, 30) + '...' : '未找到'}\n`;
+                output += `  V3: ${v3Match ? v3Match[1].trim().substring(0, 30) + '...' : '未找到'}\n\n`;
+                
+                output += '📝 分享标题:\n';
+                output += `  完整: ${shareTitle}\n`;
+                output += `  Day: ${dayMatch ? dayMatch[1] : '未找到'}\n`;
+                output += `  主标题: ${titleParts[0]}\n`;
+                output += `  副标题: ${titleParts[1] || '无'}\n\n`;
+                
+                output += `📐 核心结构: ${testData.本次核心结构.split('\n').length} 个要点\n`;
+                output += `🎯 升级点: ${testData.表达升级点.split('\n').length} 个改进`;
+                
+                result.className = 'result success';
+                result.textContent = output;
+                
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 解析失败: ${error.message}`;
+            }
+        };
+
+        console.log('🧪 新图片生成测试页面已加载');
+        console.log('💡 提示: 点击测试按钮验证功能');
+    </script>
+</body>
+</html>

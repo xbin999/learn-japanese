@@ -1,0 +1,9 @@
+name = "japanese-sync-worker"
+main = "src/index.js"
+compatibility_date = "2026-03-02"
+
+[env.local]
+vars = { ENVIRONMENT = "local", FRONTEND_URL = "http://localhost:8080" }
+
+# 本地开发时用 .env 文件注入 secrets
+# NOTION_TOKEN 与 DATABASE_ID 放在 .dev.vars
