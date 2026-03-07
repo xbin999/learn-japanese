@@ -10,13 +10,26 @@ export default {
     // 允许任何 localhost 端口或配置的生产域名
     let allowOrigin = origin;
     
-    // 如果不是本地开发环境，需要严格检查 Origin
-    // 但为了本地开发方便，我们允许 localhost/127.0.0.1 及其任意端口
+    // 宽松的 CORS 策略：
+    // 1. 本地开发 (localhost/127.0.0.1)
+    // 2. 环境变量配置的 FRONTEND_URL
+    // 3. Cloudflare Pages 自动生成的域名 (*.pages.dev)
+    // 4. 自定义域名 (jp.mathmind.homes) - 显式添加
+    
     const isLocal = origin && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1'));
+    const isPagesDev = origin && origin.endsWith('.pages.dev');
+    const isCustomDomain = origin && (origin === 'https://jp.mathmind.homes' || origin === 'http://jp.mathmind.homes');
+    
     const allowedOrigins = [env.FRONTEND_URL].filter(Boolean);
     
-    if (!isLocal && !allowedOrigins.includes(origin)) {
-      allowOrigin = allowedOrigins[0] || ''; // 如果不匹配，回退到默认允许的域名（如果没有配置则为空）
+    // 如果Origin不在白名单中，但符合我们的宽松规则，则允许它
+    if (!allowedOrigins.includes(origin)) {
+      if (isLocal || isPagesDev || isCustomDomain) {
+        allowOrigin = origin;
+      } else {
+        // 如果都不匹配，才回退到默认
+        allowOrigin = allowedOrigins[0] || ''; 
+      }
     }
 
     const corsHeaders = {

@@ -40,56 +40,36 @@ export async function loadHistory(reset = false, query = '') {
   let targetUrl = '';
 
   try {
-    // 修复URL构造：更加稳健的处理方式
-    // 在Cloudflare Pages环境中，如果WORKER_URL为空字符串，我们应该直接使用相对路径，或者正确构造绝对路径
-    // 之前的问题可能是 new URL(path) 如果path不是绝对路径且没有提供base参数会报错
+    // -----------------------------------------------------------
+    // 终极修复：完全避开 new URL() 构造绝对路径的复杂性
+    // 直接使用相对路径 + URLSearchParams 字符串拼接
+    // -----------------------------------------------------------
     
-    let fetchUrl;
+    let baseUrl = '';
     
-    // 增加详细的诊断日志
-    console.log('Environment Debug Info:', {
-      WORKER_URL,
-      type: typeof WORKER_URL,
-      origin: window.location.origin
-    });
-
+    // 1. 确定基础路径
     if (WORKER_URL && typeof WORKER_URL === 'string' && WORKER_URL.trim() !== '') {
-      // 如果配置了WORKER_URL（如本地开发环境）
-      let baseUrl = WORKER_URL.trim();
-      if (baseUrl.endsWith('/')) {
-        baseUrl = baseUrl.slice(0, -1);
-      }
-      targetUrl = `${baseUrl}/history`;
-      
-      try {
-        fetchUrl = new URL(targetUrl);
-      } catch (e) {
-        console.error('Invalid WORKER_URL construction:', targetUrl, e);
-        // 回退机制：如果构造失败，尝试作为相对路径处理
-        fetchUrl = new URL(targetUrl, window.location.origin);
-      }
+      // 本地开发环境：使用显式配置的 URL
+      baseUrl = WORKER_URL.trim();
+      if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+      baseUrl += '/history';
     } else {
-      // 生产环境，使用当前域名
-      // 使用 window.location.origin 确保构建出绝对路径
-      // 注意：某些旧浏览器可能不支持 window.location.origin，需要回退
-      const origin = window.location.origin || 
-                    (window.location.protocol + '//' + window.location.host);
-      
-      targetUrl = `${origin}/history`;
-      fetchUrl = new URL(targetUrl);
-    }
-    
-    console.log('Fetching history from:', fetchUrl.toString()); // 调试日志
-    
-    fetchUrl.searchParams.set('limit', '10');
-    if (nextCursor) {
-      fetchUrl.searchParams.set('cursor', nextCursor);
-    }
-    if (query) {
-      fetchUrl.searchParams.set('title', query);
+      // 生产环境：使用相对路径，让浏览器自动处理
+      baseUrl = '/history';
     }
 
-    const res = await fetch(fetchUrl);
+    // 2. 构建查询参数
+    const params = new URLSearchParams();
+    params.set('limit', '10');
+    if (nextCursor) params.set('cursor', nextCursor);
+    if (query) params.set('title', query);
+
+    // 3. 拼接最终请求地址
+    const finalUrl = `${baseUrl}?${params.toString()}`;
+    
+    console.log('Fetching history from:', finalUrl);
+
+    const res = await fetch(finalUrl);
     if (!res.ok) throw new Error(`History API error: ${res.status}`);
     
     const data = await res.json();
@@ -108,25 +88,14 @@ export async function loadHistory(reset = false, query = '') {
 
   } catch (err) {
     console.error('Failed to load history:', err);
-    // 详细的错误诊断信息
-    const debugInfo = `
-      <br><small style="font-size:0.7em; color:#666;">
-        <b>Debug Info:</b><br>
-        Target URL: ${targetUrl || 'undefined'}<br>
-        WORKER_URL: ${JSON.stringify(WORKER_URL)}<br>
-        Origin: ${window.location.origin}<br>
-        Error: ${err.name} - ${err.message}
-      </small>
-    `;
-
     if (reset && historyContainer) {
        historyContainer.innerHTML = `<div style="text-align:center; color:red; padding: 1rem;">
          加载失败<br>
-         <small>请确保后端服务已启动 (localhost:8787)</small>
-         ${debugInfo}
+         <small>请确保后端服务已启动</small><br>
+         <small style="color:#999; font-size:0.8em">${err.message}</small>
        </div>`;
     } else {
-       alert(`加载更多失败: ${err.message}\n(请查看控制台日志)`);
+       alert(`加载更多失败: ${err.message}`);
     }
   } finally {
     isLoading = false;
