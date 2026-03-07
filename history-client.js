@@ -37,15 +37,27 @@ export async function loadHistory(reset = false, query = '') {
     loadMoreBtn.disabled = true;
   }
 
+  let targetUrl = '';
+
   try {
-    // 修复URL构造：处理空WORKER_URL的情况
-    let endpoint = WORKER_URL || '';
-    if (endpoint && !endpoint.endsWith('/')) {
-      endpoint += '/';
-    }
-    endpoint += 'history';
+    // 修复URL构造：更加稳健的处理方式
+    let baseUrl = WORKER_URL;
     
-    const url = new URL(endpoint, window.location.origin);
+    // 如果没有配置WORKER_URL，使用当前页面源作为基础
+    if (!baseUrl) {
+      baseUrl = window.location.origin;
+    }
+    
+    // 移除末尾斜杠，确保拼接一致性
+    if (baseUrl.endsWith('/')) {
+      baseUrl = baseUrl.slice(0, -1);
+    }
+    
+    targetUrl = `${baseUrl}/history`;
+    
+    console.log('Fetching history from:', targetUrl); // 调试日志
+    
+    const url = new URL(targetUrl);
     url.searchParams.set('limit', '10');
     if (nextCursor) {
       url.searchParams.set('cursor', nextCursor);
@@ -74,7 +86,7 @@ export async function loadHistory(reset = false, query = '') {
   } catch (err) {
     console.error('Failed to load history:', err);
     if (reset && historyContainer) {
-       historyContainer.innerHTML = `<div style="text-align:center; color:red; padding: 1rem;">加载失败: ${err.message}<br><small>请确保后端服务已启动 (localhost:8787)</small></div>`;
+       historyContainer.innerHTML = `<div style="text-align:center; color:red; padding: 1rem;">加载失败: ${err.message}<br><small>URL: ${targetUrl}</small><br><small>请确保后端服务已启动 (localhost:8787)</small></div>`;
     } else {
        alert('加载更多失败，请重试');
     }
