@@ -41,32 +41,37 @@ export async function loadHistory(reset = false, query = '') {
 
   try {
     // 修复URL构造：更加稳健的处理方式
-    let baseUrl = WORKER_URL;
+    // 在Cloudflare Pages环境中，如果WORKER_URL为空字符串，我们应该直接使用相对路径，或者正确构造绝对路径
+    // 之前的问题可能是 new URL(path) 如果path不是绝对路径且没有提供base参数会报错
     
-    // 如果没有配置WORKER_URL，使用当前页面源作为基础
-    if (!baseUrl) {
-      baseUrl = window.location.origin;
+    let fetchUrl;
+    
+    if (WORKER_URL) {
+      // 如果配置了WORKER_URL（如本地开发环境）
+      let baseUrl = WORKER_URL;
+      if (baseUrl.endsWith('/')) {
+        baseUrl = baseUrl.slice(0, -1);
+      }
+      targetUrl = `${baseUrl}/history`;
+      fetchUrl = new URL(targetUrl);
+    } else {
+      // 生产环境，使用当前域名
+      // 使用 window.location.origin 确保构建出绝对路径
+      targetUrl = `${window.location.origin}/history`;
+      fetchUrl = new URL(targetUrl);
     }
-    
-    // 移除末尾斜杠，确保拼接一致性
-    if (baseUrl.endsWith('/')) {
-      baseUrl = baseUrl.slice(0, -1);
-    }
-    
-    targetUrl = `${baseUrl}/history`;
     
     console.log('Fetching history from:', targetUrl); // 调试日志
     
-    const url = new URL(targetUrl);
-    url.searchParams.set('limit', '10');
+    fetchUrl.searchParams.set('limit', '10');
     if (nextCursor) {
-      url.searchParams.set('cursor', nextCursor);
+      fetchUrl.searchParams.set('cursor', nextCursor);
     }
     if (query) {
-      url.searchParams.set('title', query);
+      fetchUrl.searchParams.set('title', query);
     }
 
-    const res = await fetch(url);
+    const res = await fetch(fetchUrl);
     if (!res.ok) throw new Error(`History API error: ${res.status}`);
     
     const data = await res.json();
