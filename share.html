@@ -33,6 +33,8 @@
       flex-direction: column;
       align-items: center;
       padding: 3rem 1rem;
+      overflow-x: hidden; /* Prevent horizontal scroll */
+      width: 100%;
     }
 
     h1 {
@@ -66,12 +68,14 @@
       width: 100%;
       max-width: 1000px; /* 宽一点以容纳两栏 */
       margin-bottom: 1.5rem;
+      box-sizing: border-box; /* Ensure padding is included in width */
     }
 
     .layout-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 2rem;
+      width: 100%; /* Ensure it takes full width of parent */
     }
     
     @media (max-width: 800px) {
@@ -84,6 +88,7 @@
     .history-column {
       border-right: 1px dashed rgba(0,0,0,0.1);
       padding-right: 2rem;
+      min-width: 0; /* Important for flex/grid children to shrink */
     }
     
     @media (max-width: 800px) {
@@ -92,6 +97,7 @@
         border-bottom: 1px dashed rgba(0,0,0,0.1);
         padding-right: 0;
         padding-bottom: 2rem;
+        width: 100%;
       }
     }
     
@@ -103,6 +109,8 @@
       margin-bottom: 0.8rem;
       cursor: pointer;
       transition: all 0.2s;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     
     .history-card:hover, .history-card.active {
@@ -135,6 +143,14 @@
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
+      min-width: 0; /* Important for flex/grid children */
+      width: 100%;
+    }
+
+    /* Make images responsive */
+    #imagePreview img {
+      max-width: 100%;
+      height: auto;
     }
     
     .section-title {

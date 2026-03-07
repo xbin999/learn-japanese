@@ -793,30 +793,45 @@ async function htmlToImage(html, width, height) {
           }
           
           // 等待字体加载 (简单延迟)
-          await new Promise(r => setTimeout(r, 100));
+          await new Promise(r => setTimeout(r, 500)); // Increase delay for mobile
           
-          const canvas = await html2canvas(iframeDoc.body, {
+          // Add timeout for html2canvas
+          const canvasPromise = html2canvas(iframeDoc.body, {
             width: width,
             height: height,
             scale: 1, // 已经是高分辨率尺寸，无需放大
             useCORS: true,
             backgroundColor: null,
-            logging: false
+            logging: false, // Disable logging in production
+            allowTaint: false, // Must be false to use toBlob
           });
+
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Image generation timed out')), 10000)
+          );
+
+          const canvas = await Promise.race([canvasPromise, timeoutPromise]);
           
           canvas.toBlob(blob => {
             if (blob) resolve(blob);
             else reject(new Error('Canvas to blob conversion failed'));
           }, 'image/png'); // 需求要求PNG
         } catch (error) {
+          console.error('html2canvas error:', error);
           reject(error);
         } finally {
-          document.body.removeChild(iframe);
+          // Clean up
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
         }
       };
       
-      iframe.onerror = () => {
-        document.body.removeChild(iframe);
+      iframe.onerror = (e) => {
+        console.error('Iframe error:', e);
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
         reject(new Error('Iframe loading failed'));
       };
     });

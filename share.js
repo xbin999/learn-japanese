@@ -195,36 +195,36 @@ async function generateImages() {
     status.innerHTML = `<span style="color:green">✅ 生成完成！</span>`;
     
     // Convert Blob objects to URLs for display
-    const imageUrlPromises = imageUrls.map(blob => URL.createObjectURL(blob));
-    const imageUrlsForDisplay = await Promise.all(imageUrlPromises);
-    
-    imageUrlsForDisplay.forEach((url, index) => {
-      const imgContainer = document.createElement('div');
-      imgContainer.style.display = 'inline-block';
-      imgContainer.style.margin = '10px';
-      
+    preview.innerHTML = '';
+    imageUrls.forEach((blob, index) => {
+      const url = URL.createObjectURL(blob);
       const img = document.createElement('img');
       img.src = url;
-      img.style.width = '150px'; // 稍微小一点
+      img.style.width = '150px';
       img.style.borderRadius = '8px';
       img.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
       img.style.cursor = 'pointer';
-      img.onclick = () => {
-        downloadImage(imageUrls[index], `${currentRecord.日期}_${currentRecord.标题}_${index + 1}.png`);
-      };
       
-      imgContainer.appendChild(img);
-      preview.appendChild(imgContainer);
+      // Add click to download single image
+      img.onclick = () => downloadImage(blob, `${processedRecord.分享标题 || '日语表达'}_${index + 1}.png`);
+      
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'inline-block';
+      wrapper.style.margin = '10px';
+      wrapper.appendChild(img);
+      preview.appendChild(wrapper);
     });
     
+    // Show Save All button
     saveAllBtn.style.display = 'inline-block';
     saveAllBtn.onclick = () => {
-      downloadMultipleImages(imageUrls, `${currentRecord.日期}_${currentRecord.标题}`);
+      downloadMultipleImages(imageUrls, processedRecord.分享标题 || '日语表达');
     };
     
   } catch (err) {
-    console.error(err);
-    status.innerHTML = `<span style="color:red">❌ 失败: ${err.message}</span>`;
+    console.error('Image generation failed:', err);
+    status.innerHTML = `<span style="color:red">❌ 生成失败: ${err.message}</span>`;
+    alert(`生成图片失败: ${err.message}\n请尝试刷新页面或使用电脑访问。`);
   } finally {
     btn.disabled = false;
     btn.textContent = '生成分享图片';
