@@ -46,22 +46,40 @@ export async function loadHistory(reset = false, query = '') {
     
     let fetchUrl;
     
-    if (WORKER_URL) {
+    // 增加详细的诊断日志
+    console.log('Environment Debug Info:', {
+      WORKER_URL,
+      type: typeof WORKER_URL,
+      origin: window.location.origin
+    });
+
+    if (WORKER_URL && typeof WORKER_URL === 'string' && WORKER_URL.trim() !== '') {
       // 如果配置了WORKER_URL（如本地开发环境）
-      let baseUrl = WORKER_URL;
+      let baseUrl = WORKER_URL.trim();
       if (baseUrl.endsWith('/')) {
         baseUrl = baseUrl.slice(0, -1);
       }
       targetUrl = `${baseUrl}/history`;
-      fetchUrl = new URL(targetUrl);
+      
+      try {
+        fetchUrl = new URL(targetUrl);
+      } catch (e) {
+        console.error('Invalid WORKER_URL construction:', targetUrl, e);
+        // 回退机制：如果构造失败，尝试作为相对路径处理
+        fetchUrl = new URL(targetUrl, window.location.origin);
+      }
     } else {
       // 生产环境，使用当前域名
       // 使用 window.location.origin 确保构建出绝对路径
-      targetUrl = `${window.location.origin}/history`;
+      // 注意：某些旧浏览器可能不支持 window.location.origin，需要回退
+      const origin = window.location.origin || 
+                    (window.location.protocol + '//' + window.location.host);
+      
+      targetUrl = `${origin}/history`;
       fetchUrl = new URL(targetUrl);
     }
     
-    console.log('Fetching history from:', targetUrl); // 调试日志
+    console.log('Fetching history from:', fetchUrl.toString()); // 调试日志
     
     fetchUrl.searchParams.set('limit', '10');
     if (nextCursor) {
@@ -90,10 +108,25 @@ export async function loadHistory(reset = false, query = '') {
 
   } catch (err) {
     console.error('Failed to load history:', err);
+    // 详细的错误诊断信息
+    const debugInfo = `
+      <br><small style="font-size:0.7em; color:#666;">
+        <b>Debug Info:</b><br>
+        Target URL: ${targetUrl || 'undefined'}<br>
+        WORKER_URL: ${JSON.stringify(WORKER_URL)}<br>
+        Origin: ${window.location.origin}<br>
+        Error: ${err.name} - ${err.message}
+      </small>
+    `;
+
     if (reset && historyContainer) {
-       historyContainer.innerHTML = `<div style="text-align:center; color:red; padding: 1rem;">加载失败: ${err.message}<br><small>URL: ${targetUrl}</small><br><small>请确保后端服务已启动 (localhost:8787)</small></div>`;
+       historyContainer.innerHTML = `<div style="text-align:center; color:red; padding: 1rem;">
+         加载失败<br>
+         <small>请确保后端服务已启动 (localhost:8787)</small>
+         ${debugInfo}
+       </div>`;
     } else {
-       alert('加载更多失败，请重试');
+       alert(`加载更多失败: ${err.message}\n(请查看控制台日志)`);
     }
   } finally {
     isLoading = false;
