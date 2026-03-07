@@ -1,0 +1,493 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>日语表达 - 查询与分享</title>
+  <style>
+    /* 复用 index.html 的样式 */
+    :root {
+      --paper: #fdfcf8;
+      --ink: #3e2723;
+      --accent: #d7ccc8;
+      --shadow: rgba(62,39,35,.08);
+      --handwriting: 'Kalam', cursive;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--paper);
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d7ccc8' fill-opacity='.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      color: var(--ink);
+      font-family: 'Noto Sans SC', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem;
+    }
+
+    h1 {
+      font-family: var(--handwriting);
+      font-size: 2.2rem;
+      margin: 0 0 1rem;
+      letter-spacing: 1px;
+      color: var(--ink);
+    }
+    
+    .nav-link {
+      margin-bottom: 2rem;
+      color: var(--ink);
+      text-decoration: none;
+      border-bottom: 1px dashed var(--ink);
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+    
+    .nav-link:hover {
+      opacity: 1;
+    }
+
+    .glass-card {
+      background: rgba(255,255,255,.55);
+      backdrop-filter: blur(8px) saturate(180%);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px var(--shadow);
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 1000px; /* 宽一点以容纳两栏 */
+      margin-bottom: 1.5rem;
+    }
+
+    .layout-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    
+    @media (max-width: 800px) {
+      .layout-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 历史列表样式 */
+    .history-column {
+      border-right: 1px dashed rgba(0,0,0,0.1);
+      padding-right: 2rem;
+    }
+    
+    @media (max-width: 800px) {
+      .history-column {
+        border-right: none;
+        border-bottom: 1px dashed rgba(0,0,0,0.1);
+        padding-right: 0;
+        padding-bottom: 2rem;
+      }
+    }
+    
+    .history-card {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(0,0,0,0.05);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .history-card:hover, .history-card.active {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      background: rgba(255,255,255,0.9);
+      border-color: var(--accent);
+    }
+    
+    .history-card.active {
+      background: #fff;
+      border: 2px solid var(--accent);
+    }
+    
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    
+    .history-date { font-size: 0.8rem; color: #888; }
+    .history-tags { display: flex; gap: 0.3rem; }
+    .tag { background: #eee; color: #555; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; }
+    .history-title { margin: 0 0 0.4rem; font-size: 1.1rem; color: var(--ink); }
+    .history-preview { margin: 0; font-size: 0.9rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* 详情与生成样式 */
+    .detail-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .section-title {
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.5);
+      color: var(--ink);
+      padding: 1rem;
+      font-family: 'Noto Sans SC', sans-serif;
+      resize: vertical;
+    }
+    
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: rgba(255,255,255,0.8);
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 24px;
+      padding: .6rem 1.4rem;
+      font-size: 1rem;
+      font-weight: 700;
+      transition: all .3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 2px solid var(--accent);
+    }
+    .secondary:hover { background: var(--accent); }
+
+    .image-generate {
+      background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+      color: white;
+      width: 100%;
+    }
+    .image-generate:hover {
+      background: linear-gradient(45deg, #ff5252, #ff7b3d);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--shadow);
+    }
+    .image-generate:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .success {
+      background: #4caf50;
+      color: white;
+    }
+
+    /* 图片预览区 */
+    #imageResult {
+      background: linear-gradient(135deg, #fff9c4 0%, #fff3a0 100%);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+    
+    /* 移动端优化 */
+    @media (max-width: 768px) {
+      body {
+        padding: 1.5rem 1rem;
+        background-size: 40px 40px;
+      }
+      
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 1rem;
+        text-align: center;
+      }
+      
+      .nav-link {
+        margin-bottom: 1.5rem;
+        text-align: center;
+      }
+      
+      .glass-card {
+        padding: 1.2rem;
+        border-radius: 12px;
+        backdrop-filter: blur(6px);
+      }
+      
+      .layout-container {
+        gap: 1.5rem;
+      }
+      
+      .history-column {
+        padding-right: 0;
+        padding-bottom: 1.5rem;
+      }
+      
+      .history-card {
+        padding: 0.8rem;
+        margin-bottom: 0.6rem;
+      }
+      
+      .history-title {
+        font-size: 1rem;
+      }
+      
+      .history-preview {
+        font-size: 0.85rem;
+      }
+      
+      .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 0.6rem;
+      }
+      
+      textarea {
+        min-height: 150px;
+        font-size: 0.9rem;
+        padding: 0.8rem;
+      }
+      
+      button {
+        padding: 0.8rem 1.2rem;
+        font-size: 0.95rem;
+        border-radius: 20px;
+      }
+      
+      #imagePreview {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      
+      #imagePreview img {
+        width: 120px !important;
+        margin: 0 !important;
+      }
+    }
+    
+    /* 小屏手机优化 */
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem 0.8rem;
+      }
+      
+      h1 {
+        font-size: 1.4rem;
+      }
+      
+      .glass-card {
+        padding: 1rem;
+        border-radius: 10px;
+      }
+      
+      .layout-container {
+        gap: 1rem;
+      }
+      
+      .history-card {
+        padding: 0.6rem;
+      }
+      
+      .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+      }
+      
+      .history-date {
+        font-size: 0.75rem;
+      }
+      
+      .tag {
+        font-size: 0.7rem;
+        padding: 1px 4px;
+      }
+      
+      .history-title {
+        font-size: 0.95rem;
+      }
+      
+      .history-preview {
+        font-size: 0.8rem;
+      }
+      
+      #searchInput {
+        min-height: 32px;
+        font-size: 0.9rem;
+      }
+      
+      #searchBtn {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.85rem;
+      }
+      
+      textarea {
+        min-height: 120px;
+        font-size: 0.85rem;
+      }
+      
+      button {
+        padding: 0.7rem 1rem;
+        font-size: 0.9rem;
+      }
+      
+      #imagePreview img {
+        width: 100px !important;
+      }
+      
+      .section-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      
+      .section-title button {
+        align-self: flex-end;
+        padding: 0.2rem 0.6rem;
+        font-size: 0.8rem;
+      }
+    }
+    
+    /* 触摸设备优化 */
+    @media (hover: none) and (pointer: coarse) {
+      .history-card:hover {
+        transform: none;
+        box-shadow: none;
+      }
+      
+      .history-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      }
+      
+      button:hover {
+        transform: none;
+        box-shadow: none;
+      }
+      
+      button:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px var(--shadow);
+      }
+    }
+    
+    /* 横屏模式优化 */
+    @media (max-height: 500px) and (orientation: landscape) {
+      body {
+        padding: 1rem 2rem;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.8rem;
+      }
+      
+      .layout-container {
+        grid-template-columns: 1fr 2fr;
+        gap: 1.5rem;
+      }
+      
+      .history-column {
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+      
+      textarea {
+        min-height: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 查询与分享</h1>
+  <a href="index.html" class="nav-link">← 返回输入页面</a>
+
+  <div class="glass-card">
+    <div class="layout-container">
+      <!-- 左侧：历史记录列表 -->
+      <div class="history-column">
+        <div class="section-title">📜 历史记录</div>
+        <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
+          <input type="text" id="searchInput" placeholder="搜索标题..." style="flex: 1; min-height: 36px; padding: 0.4rem 0.8rem; border-radius: 18px; border: 1px solid #ddd; outline: none;">
+          <button id="searchBtn" class="primary" style="padding: 0.4rem 1rem; font-size: 0.9rem;">搜索</button>
+        </div>
+        <div id="historyList">
+          <div style="text-align:center; color:#999; padding: 2rem;">请输入标题搜索或直接点击搜索加载最近记录</div>
+        </div>
+        <button id="loadMoreHistoryBtn" class="secondary" style="width: 100%; margin-top: 1rem; display: none;">加载更多</button>
+      </div>
+
+      <!-- 右侧：详情与生成 -->
+      <div class="detail-column" id="detailPanel" style="opacity: 0.5; pointer-events: none;">
+        
+        <!-- 文案生成区 -->
+        <div>
+          <div class="section-title">
+            <span>📝 小红书文案</span>
+            <button id="copyTextBtn" class="secondary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">复制文案</button>
+          </div>
+          <textarea id="xhsContent" placeholder="选择左侧记录后自动生成..."></textarea>
+          <div style="text-align: right; margin-top: 0.5rem;">
+            <small style="color: #666; cursor: pointer;" id="toggleTemplate">⚙️ 编辑模板</small>
+          </div>
+          <textarea id="templateEditor" style="display: none; height: 150px; margin-top: 0.5rem; font-family: monospace; font-size: 0.8rem;" placeholder="在这里编辑模板..."></textarea>
+        </div>
+
+        <!-- 图片生成区 -->
+        <div>
+          <div class="section-title">✨ 图片生成</div>
+          <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+              <input type="radio" name="cardStyle" value="linear" checked> 
+              <span>Linear (极简)</span>
+            </label>
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+              <input type="radio" name="cardStyle" value="knowledge"> 
+              <span>Knowledge (知识)</span>
+            </label>
+          </div>
+          <button id="generateImageBtn" class="image-generate">生成分享图片</button>
+          
+          <div id="imageResult" style="display: none;">
+            <div id="imageStatus">正在生成...</div>
+            <div id="imagePreview" style="margin-top: 1rem; text-align: center;"></div>
+            <div id="saveAllCards" style="margin-top: 1rem; text-align: center;">
+              <button id="saveAllBtn" class="success" style="display: none; padding: 0.4rem 1rem;">保存所有</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script type="module" src="./share.js"></script>
+</body>
+</html>

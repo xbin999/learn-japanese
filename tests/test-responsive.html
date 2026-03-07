@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>响应式测试页面</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #fdfcf8 0%, #f5f2e8 100%);
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .device-simulator {
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+            background: #f9f9f9;
+        }
+        
+        .device-info {
+            background: #e3f2fd;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .responsive-demo {
+            display: grid;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .demo-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .demo-button {
+            background: #3e2723;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        /* 响应式断点测试 */
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            .test-container { padding: 1.2rem; }
+            .demo-card { padding: 0.8rem; }
+            .demo-button { width: 100%; }
+        }
+        
+        @media (max-width: 480px) {
+            body { padding: 0.8rem; }
+            .test-container { padding: 1rem; border-radius: 12px; }
+            .demo-card { padding: 0.6rem; }
+            .device-info { font-size: 0.8rem; }
+        }
+        
+        /* 触摸设备测试 */
+        @media (hover: none) and (pointer: coarse) {
+            .demo-button:hover {
+                transform: none;
+                box-shadow: none;
+            }
+            
+            .demo-button:active {
+                transform: scale(0.98);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            }
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .feature-item {
+            background: rgba(255,255,255,0.8);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-good { background: #4caf50; }
+        .status-warning { background: #ff9800; }
+        .status-error { background: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎨 响应式设计测试中心</h1>
+        <p>测试您的日语学习应用在不同设备上的表现</p>
+        
+        <div class="device-info">
+            <strong>当前设备信息：</strong>
+            <span id="deviceInfo">检测中...</span>
+        </div>
+        
+        <div class="feature-grid">
+            <div class="feature-item">
+                <h3><span class="status-indicator status-good"></span>移动端适配</h3>
+                <p>✅ 触摸优化<br>
+                ✅ 自动调整输入框高度<br>
+                ✅ 防止意外缩放<br>
+                ✅ 手势滑动支持</p>
+            </div>
+            
+            <div class="feature-item">
+                <h3><span class="status-indicator status-good"></span>响应式布局</h3>
+                <p>✅ 768px 平板断点<br>
+                ✅ 480px 手机断点<br>
+                ✅ 横屏模式优化<br>
+                ✅ 弹性网格系统</p>
+            </div>
+            
+            <div class="feature-item">
+                <h3><span class="status-indicator status-good"></span>交互优化</h3>
+                <p>✅ 触摸反馈<br>
+                ✅ 快速返回顶部<br>
+                ✅ 智能滚动<br>
+                ✅ 防误触设计</p>
+            </div>
+            
+            <div class="feature-item">
+                <h3><span class="status-indicator status-good"></span>视觉设计</h3>
+                <p>✅ 和纸纹理背景<br>
+                ✅ 手写体字体<br>
+                ✅ 暖色调配色<br>
+                ✅ 玻璃态效果</p>
+            </div>
+        </div>
+        
+        <div class="device-simulator">
+            <h3>📱 设备模拟器</h3>
+            <p>调整浏览器窗口大小来测试不同设备下的显示效果：</p>
+            <div class="responsive-demo">
+                <div class="demo-card">
+                    <h4>输入页面测试</h4>
+                    <p>在手机上会自动调整输入框高度，按钮变为全宽，文本大小适配。</p>
+                    <a href="index.html" class="demo-button">测试输入页面</a>
+                </div>
+                
+                <div class="demo-card">
+                    <h4>查询分享页面测试</h4>
+                    <p>双栏布局在手机上变为单栏，支持左右滑动切换记录，图片预览自动调整。</p>
+                    <a href="share.html" class="demo-button">测试查询分享页面</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="device-simulator">
+            <h3>🎯 测试建议</h3>
+            <ul>
+                <li><strong>手机测试：</strong>使用 Chrome DevTools 的设备模拟器，测试 iPhone SE、iPhone 12、Pixel 5 等常见设备</li>
+                <li><strong>平板测试：</strong>测试 iPad、iPad Pro、Surface 等平板设备的横竖屏切换</li>
+                <li><strong>触摸测试：</strong>在真实移动设备上测试触摸交互和手势操作</li>
+                <li><strong>性能测试：</strong>检查在低端设备上的加载速度和动画流畅度</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center; margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.5); border-radius: 8px;">
+            <p>💡 <strong>提示：</strong> 使用浏览器开发者工具 (F12) 的设备模拟模式进行测试，或直接在真实移动设备上访问此页面。</p>
+        </div>
+    </div>
+    
+    <script>
+        // 检测设备信息
+        function detectDevice() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const pixelRatio = window.devicePixelRatio || 1;
+            const isTouch = 'ontouchstart' in window;
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            let deviceType = '桌面设备';
+            if (width <= 480) deviceType = '手机设备';
+            else if (width <= 768) deviceType = '平板设备';
+            
+            const deviceInfo = `
+                类型: ${deviceType} | 
+                分辨率: ${width}x${height} | 
+                像素比: ${pixelRatio}x | 
+                触摸支持: ${isTouch ? '是' : '否'} | 
+                移动设备: ${isMobile ? '是' : '否'}
+            `;
+            
+            document.getElementById('deviceInfo').textContent = deviceInfo;
+        }
+        
+        // 实时更新设备信息
+        window.addEventListener('resize', detectDevice);
+        window.addEventListener('load', detectDevice);
+        
+        // 添加触摸反馈
+        if ('ontouchstart' in window) {
+            document.querySelectorAll('.demo-button, .feature-item').forEach(element => {
+                element.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                
+                element.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                });
+            });
+        }
+        
+        // 添加性能监控
+        if (window.performance && window.performance.timing) {
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const timing = window.performance.timing;
+                    const loadTime = timing.loadEventEnd - timing.navigationStart;
+                    console.log(`页面加载时间: ${loadTime}ms`);
+                }, 0);
+            });
+        }
+    </script>
+</body>
+</html>

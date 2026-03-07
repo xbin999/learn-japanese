@@ -6,15 +6,22 @@ export default {
   async fetch(request, env) {
     // 统一 CORS 头：允许配置的前端地址调用
     const origin = request.headers.get('Origin');
-    const allowedOrigins = [
-      'http://localhost:8080',
-      'http://localhost:8081',
-      env.FRONTEND_URL
-    ].filter(Boolean); // 过滤掉 undefined/null
     
+    // 允许任何 localhost 端口或配置的生产域名
+    let allowOrigin = origin;
+    
+    // 如果不是本地开发环境，需要严格检查 Origin
+    // 但为了本地开发方便，我们允许 localhost/127.0.0.1 及其任意端口
+    const isLocal = origin && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1'));
+    const allowedOrigins = [env.FRONTEND_URL].filter(Boolean);
+    
+    if (!isLocal && !allowedOrigins.includes(origin)) {
+      allowOrigin = allowedOrigins[0] || ''; // 如果不匹配，回退到默认允许的域名（如果没有配置则为空）
+    }
+
     const corsHeaders = {
-      'Access-Control-Allow-Origin': allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Origin': allowOrigin,
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // 补充 GET 方法支持
       'Access-Control-Allow-Headers': 'Content-Type'
     };
 
@@ -22,14 +29,13 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    if (request.method !== 'POST') {
-      return new Response('Method not allowed', { status: 405, headers: corsHeaders });
-    }
-
     const url = new URL(request.url);
     
     // AI图片生成代理接口
     if (url.pathname === '/generate-image') {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+      }
       try {
         const body = await request.json();
         const { prompt, aspect_ratio = '3:4' } = body;
@@ -72,6 +78,9 @@ export default {
     
     // Notion同步接口
     if (url.pathname === '/sync') {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+      }
       try {
         const body = await request.json();
         await createNotionPage(body, env);
@@ -82,9 +91,128 @@ export default {
       }
     }
 
+    // Notion 历史记录查询接口
+    if (url.pathname === '/history') {
+      if (request.method !== 'GET') {
+        return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+      }
+      try {
+        const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+        const cursor = url.searchParams.get('cursor');
+        const title = url.searchParams.get('title');
+        const data = await getNotionHistory(env, limit, cursor, title);
+        return Response.json(data, { headers: corsHeaders });
+      } catch (err) {
+        console.error(err);
+        return Response.json({ ok: false, error: err.message }, { status: 500, headers: corsHeaders });
+      }
+    }
+
     return new Response('Not found', { status: 404, headers: corsHeaders });
   }
 };
+
+async function getNotionHistory(env, limit, cursor, title) {
+  const { NOTION_TOKEN, DATABASE_ID } = env;
+  if (!NOTION_TOKEN || !DATABASE_ID) {
+    throw new Error('Missing NOTION_TOKEN or DATABASE_ID');
+  }
+
+  const queryBody = {
+    page_size: limit,
+    sorts: [
+      {
+        property: '日期',
+        direction: 'descending'
+      }
+    ]
+  };
+
+  if (cursor) {
+    queryBody.start_cursor = cursor;
+  }
+
+  if (title) {
+    queryBody.filter = {
+      property: '标题',
+      title: {
+        contains: title
+      }
+    };
+  }
+
+  const res = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${NOTION_TOKEN}`,
+      'Content-Type': 'application/json',
+      'Notion-Version': '2022-06-28'
+    },
+    body: JSON.stringify(queryBody)
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Notion API ${res.status}: ${text}`);
+  }
+
+  const data = await res.json();
+  
+  const results = data.results.map(page => {
+    const props = page.properties;
+    return {
+      id: page.id,
+      created_time: page.created_time,
+      last_edited_time: page.last_edited_time,
+      标题: getTextContent(props.标题),
+      主题: getMultiSelect(props.主题),
+      日期: getDate(props.日期),
+      我想表达: getTextContent(props.我想表达),
+      进化过程: getTextContent(props.进化过程),
+      最终定稿: getTextContent(props.最终定稿),
+      本次核心结构: getTextContent(props.本次核心结构),
+      表达升级点: getTextContent(props.表达升级点),
+      错误记录: getTextContent(props.错误记录),
+      生词: getTextContent(props.生词),
+      学习总结: getTextContent(props.学习总结),
+      分享标题: getTextContent(props.分享标题),
+      来源: getSelect(props.来源)
+    };
+  });
+
+  return {
+    results,
+    next_cursor: data.next_cursor,
+    has_more: data.has_more
+  };
+}
+
+// 辅助函数：提取 Notion 属性值
+function getTextContent(prop) {
+  if (!prop) return '';
+  if (prop.type === 'title' && prop.title && prop.title.length > 0) {
+    return prop.title.map(t => t.plain_text).join('');
+  }
+  if (prop.type === 'rich_text' && prop.rich_text && prop.rich_text.length > 0) {
+    return prop.rich_text.map(t => t.plain_text).join('');
+  }
+  return '';
+}
+
+function getMultiSelect(prop) {
+  if (!prop || prop.type !== 'multi_select') return [];
+  return prop.multi_select.map(item => item.name);
+}
+
+function getSelect(prop) {
+  if (!prop || prop.type !== 'select' || !prop.select) return '';
+  return prop.select.name;
+}
+
+function getDate(prop) {
+  if (!prop || prop.type !== 'date' || !prop.date) return '';
+  return prop.date.start;
+}
 
 async function createNotionPage(data, env) {
   const { NOTION_TOKEN, DATABASE_ID } = env;

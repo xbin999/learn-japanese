@@ -1,7 +1,12 @@
+
 <!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="format-detection" content="telephone=no" />
   <title>日语表达记录同步</title>
   <style>
     /* 和纸暖调变量 */
@@ -212,12 +217,155 @@
       100% { transform: scale(0) translate(var(--x), var(--y)); opacity: 0; }
     }
 
-    /* 响应式微调 */
-    @media (max-width: 600px) {
-      body { padding: 2rem 1rem; }
-      h1 { font-size: 1.8rem; }
-      .glass-card { padding: 1rem; }
-      textarea { height: 180px; }
+    /* 移动端优先设计 */
+    @media (max-width: 768px) {
+      body { 
+        padding: 1.5rem 1rem; 
+        background-size: 40px 40px;
+      }
+      
+      h1 { 
+        font-size: 1.6rem; 
+        margin-bottom: 1.5rem;
+        text-align: center;
+      }
+      
+      .glass-card { 
+        padding: 1.2rem; 
+        margin-bottom: 1rem;
+        border-radius: 12px;
+        backdrop-filter: blur(6px);
+      }
+      
+      textarea { 
+        height: 160px; 
+        font-size: 0.95rem;
+        padding-left: 42px;
+        background-position: 0 0;
+        background-size: 32px 1px;
+      }
+      
+      .actions {
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+      
+      button {
+        width: 100%;
+        padding: 0.8rem 1.2rem;
+        font-size: 0.95rem;
+        border-radius: 20px;
+      }
+      
+      .note {
+        padding: 1rem 1.2rem;
+        font-size: 0.9rem;
+        border-radius: 6px 12px 12px 6px;
+      }
+      
+      #syncResult {
+        padding: 1rem;
+        font-size: 0.9rem;
+      }
+      
+      .history-card {
+        padding: 0.8rem;
+        margin-bottom: 0.6rem;
+      }
+      
+      .history-title {
+        font-size: 1rem;
+      }
+      
+      .history-preview {
+        font-size: 0.85rem;
+      }
+    }
+    
+    /* 小屏手机优化 */
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem 0.8rem;
+      }
+      
+      h1 {
+        font-size: 1.4rem;
+        letter-spacing: 0.5px;
+      }
+      
+      .glass-card {
+        padding: 1rem;
+        border-radius: 10px;
+      }
+      
+      textarea {
+        height: 140px;
+        font-size: 0.9rem;
+        padding-left: 38px;
+      }
+      
+      button {
+        padding: 0.7rem 1rem;
+        font-size: 0.9rem;
+      }
+      
+      .note {
+        padding: 0.8rem 1rem;
+        font-size: 0.85rem;
+      }
+    }
+    
+    /* 触摸设备优化 */
+    @media (hover: none) and (pointer: coarse) {
+      button:hover {
+        transform: none;
+        box-shadow: none;
+      }
+      
+      button:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px var(--shadow);
+      }
+      
+      button::after {
+        display: none;
+      }
+      
+      .history-card:hover {
+        transform: none;
+        box-shadow: none;
+      }
+      
+      .history-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      }
+    }
+    
+    /* 横屏模式优化 */
+    @media (max-height: 500px) and (orientation: landscape) {
+      body {
+        padding: 1rem 2rem;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      textarea {
+        height: 120px;
+      }
+      
+      .actions {
+        flex-direction: row;
+        gap: 1rem;
+      }
+      
+      button {
+        width: auto;
+        padding: 0.6rem 1.2rem;
+      }
     }
 
     /* 字体降级兜底 */
@@ -226,15 +374,81 @@
       src: local('Comic Sans MS'); /* 最接近手写的中文字体 */
       unicode-range: U+4E00-9FFF;
     }
+    
+    /* 历史记录样式 */
+    #historySection {
+      width: 100%;
+      max-width: 680px;
+      margin-top: 2rem;
+    }
+    
+    .history-card {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(0,0,0,0.05);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .history-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      background: rgba(255,255,255,0.9);
+    }
+    
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    
+    .history-date {
+      font-size: 0.8rem;
+      color: #888;
+    }
+    
+    .history-tags {
+      display: flex;
+      gap: 0.3rem;
+    }
+    
+    .tag {
+      background: #eee;
+      color: #555;
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    
+    .history-title {
+      margin: 0 0 0.4rem;
+      font-size: 1.1rem;
+      color: var(--ink);
+    }
+    
+    .history-preview {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     </style>
 </head>
 <body>
   <h1>📓 日语表达记录</h1>
+  <a href="share.html" class="nav-link" style="margin-bottom: 1.5rem; display: inline-block; color: var(--ink); text-decoration: none; border-bottom: 1px dashed var(--ink); font-size: 0.9rem; opacity: 0.7;">👉 前往查询与分享页面</a>
+
   <div class="glass-card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
       <small style="color: var(--ink); opacity: 0.7;">💡 提示：Ctrl+A 全选，或点击右上角清除按钮</small>
       <button id="clearBtn" class="secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">清除</button>
     </div>
+    <div id="syncResult" class="note" style="margin-bottom: 1rem; text-align: center; font-weight: bold;">（同步结果会出现在这里）</div>
     <textarea id="input" placeholder="标题：…
 主题：…
 ——进化过程——
@@ -243,22 +457,6 @@ V1: …"></textarea>
       <button id="parseBtn" class="primary">解析</button>
       <button id="syncBtn" class="secondary" disabled>同步到 Notion</button>
     </div>
-    
-    <!-- 风格选择与生成区域 -->
-    <div id="generationArea" style="margin-top: 1.5rem; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 1.5rem; display: none;">
-      <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1.5rem;">
-        <span style="font-weight: 700; color: var(--ink);">视觉风格:</span>
-        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
-          <input type="radio" name="cardStyle" value="linear" checked> 
-          <span>Linear (极简) <span style="font-size: 0.8em; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px;">推荐</span></span>
-        </label>
-        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
-          <input type="radio" name="cardStyle" value="knowledge"> 
-          <span>Knowledge (知识)</span>
-        </label>
-      </div>
-      <button id="generateImageBtn" class="image-generate" style="width: 100%;">✨ 生成小红书分享图片</button>
-    </div>
   </div>
 
   <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 .6rem;">
@@ -266,34 +464,21 @@ V1: …"></textarea>
     <button id="copyPreviewBtn" class="secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; display: none;">复制文本</button>
   </div>
   <div id="preview" class="note">（解析结果会出现在这里）</div>
-  <div id="syncResult" class="note">（同步结果会出现在这里）</div>
-  <div id="imageResult" class="note" style="display: none;">
-    <div id="imageStatus">（图片生成结果会出现在这里）</div>
-    <div id="imagePreview" style="margin-top: 1rem; text-align: center;"></div>
-    <div id="saveAllCards" style="margin-top: 1rem; text-align: center;">
-      <button id="saveAllBtn" class="success" style="display: none;">保存所有卡片</button>
-    </div>
-  </div>
+  
   <div id="fireworks"></div>
 
   <script type="module">
     import { parseText } from './parse.js';
     import { WORKER_URL } from './config.js';
-    import { generateAllCards, downloadMultipleImages, downloadImage } from './image-generator.js';
 
     const input = document.getElementById('input');
     const preview = document.getElementById('preview');
     const syncResult = document.getElementById('syncResult');
-    const imageResult = document.getElementById('imageResult');
-    const imageStatus = document.getElementById('imageStatus');
-    const imagePreview = document.getElementById('imagePreview');
     const parseBtn = document.getElementById('parseBtn');
     const syncBtn = document.getElementById('syncBtn');
-    const generateImageBtn = document.getElementById('generateImageBtn');
-    const generationArea = document.getElementById('generationArea');
     const clearBtn = document.getElementById('clearBtn');
     const copyPreviewBtn = document.getElementById('copyPreviewBtn');
-
+    
     let lastData = null; // 保存最新解析结果
 
     // 清除按钮功能
@@ -302,276 +487,245 @@ V1: …"></textarea>
       input.focus();
       preview.textContent = '（解析结果会出现在这里）';
       syncResult.textContent = '（同步结果会出现在这里）';
-      imageResult.style.display = 'none';
       syncBtn.disabled = true;
-      generationArea.style.display = 'none';
       copyPreviewBtn.style.display = 'none';
       lastData = null;
     });
 
-    // 复制便签预览功能
-    copyPreviewBtn.addEventListener('click', () => {
-      const range = document.createRange();
-      range.selectNode(preview);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(range);
-      try {
-        document.execCommand('copy');
-        const originalText = copyPreviewBtn.textContent;
-        copyPreviewBtn.textContent = '已复制！';
-        setTimeout(() => {
-          copyPreviewBtn.textContent = originalText;
-        }, 2000);
-      } catch (err) {
-        console.error('复制失败', err);
-      }
-      window.getSelection().removeAllRanges();
-    });
-
-    // 全选功能 (Ctrl+A)
-    input.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.key === 'a') {
-        e.preventDefault();
-        input.select();
-      }
-    });
 
     parseBtn.addEventListener('click', () => {
-      const raw = input.value.trim();
-      if (!raw) return;
-      lastData = parseText(raw);
-      console.log('解析结果:', lastData);
+      const text = input.value;
+      if (!text.trim()) {
+        alert('请先粘贴文本');
+        return;
+      }
+
+      const data = parseText(text);
+      lastData = data; // 保存解析结果
       
-      // 格式化显示解析结果，包括新字段
-      let previewHTML = '<div style="font-family: monospace; font-size: 14px; line-height: 1.4;">';
-      
-      // 基本信息
-      previewHTML += '<div style="margin-bottom: 15px;"><strong>📋 基本信息</strong><br>';
-      previewHTML += `标题: ${lastData.标题 || '(空)'}<br>`;
-      previewHTML += `主题: ${lastData.主题 || '(空)'}<br>`;
-      previewHTML += `我想表达: ${lastData.我想表达 || '(空)'}<br>`;
-      previewHTML += `分享标题: ${lastData.分享标题 || '(空)'}<br>`;
-      previewHTML += `学习总结: ${lastData.学习总结 || '(空)'}</div>`;
-      
-      // 进化过程
-      previewHTML += '<div style="margin-bottom: 15px;"><strong>🔄 进化过程</strong><br>';
-      previewHTML += `<pre style="margin: 5px 0; white-space: pre-wrap;">${lastData.进化过程 || '(空)'}</pre></div>`;
-      
-      // 最终定稿
-      previewHTML += '<div style="margin-bottom: 15px;"><strong>📝 最终定稿</strong><br>';
-      previewHTML += `<pre style="margin: 5px 0; white-space: pre-wrap;">${lastData.最终定稿 || '(空)'}</pre></div>`;
-      
+      // 生成预览HTML
+      let html = `
+        <div style="margin-bottom:1em">
+          <strong style="font-size:1.2em">${data.标题 || '无标题'}</strong>
+          <span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:0.8em; margin-left:8px">${data.主题 || '未分类'}</span>
+        </div>
+      `;
+
+      if (data.分享标题) html += `<p><strong>📌 分享标题：</strong>${data.分享标题}</p>`;
+      if (data.学习总结) html += `<p><strong>📝 学习总结：</strong>${data.学习总结}</p>`;
+
+      if (data.进化过程) {
+        html += `<div style="margin:1em 0; padding-left:1em; border-left:3px solid var(--accent)">
+          <div style="font-weight:bold; margin-bottom:0.5em">🔄 进化过程</div>
+          <div style="white-space:pre-wrap; font-family:monospace; font-size:0.9em">${data.进化过程}</div>
+        </div>`;
+      }
+
+      if (data.最终定稿) {
+        html += `<div style="margin:1em 0; background:rgba(255,255,255,0.5); padding:1em; border-radius:8px">
+          <div style="font-weight:bold; color:#2e7d32">✅ 最终定稿</div>
+          <div style="font-size:1.1em; margin-top:0.5em">${data.最终定稿}</div>
+        </div>`;
+      }
+
       // 核心结构
-      previewHTML += '<div style="margin-bottom: 15px;"><strong>📐 核心结构</strong><br>';
-      previewHTML += `<pre style="margin: 5px 0; white-space: pre-wrap;">${lastData.本次核心结构 || '(空)'}</pre></div>`;
-      
+      if (data.本次核心结构) {
+        html += `<p><strong>🔑 核心结构：</strong>${data.本次核心结构}</p>`;
+      }
+
       // 表达升级点
-      previewHTML += '<div style="margin-bottom: 15px;"><strong>🎯 表达升级点</strong><br>';
-      previewHTML += `<pre style="margin: 5px 0; white-space: pre-wrap;">${lastData.表达升级点 || '(空)'}</pre></div>`;
-      
-      // 错误记录详情
-      if (lastData.错误记录.length > 0) {
-        previewHTML += '<div style="margin-bottom: 15px;"><strong>❌ 错误记录</strong><br>';
-        lastData.错误记录.forEach((error, index) => {
-          previewHTML += `<div style="background: rgba(255,235,238,0.5); padding: 8px; margin: 5px 0; border-radius: 6px; border-left: 3px solid #ff5252;">`;
-          previewHTML += `<strong>${error.错误名称 || '错误' + (index + 1)}</strong><br>`;
-          previewHTML += `<small style="color: #666;">${error.典型错误说明 || ''}</small><br>`;
-          if (error.正确表达模式) {
-            previewHTML += `<small style="color: #2e7d32;">✓ ${error.正确表达模式}</small>`;
-          }
-          previewHTML += '</div>';
-        });
-        previewHTML += '</div>';
+      if (data.表达升级点) {
+        html += `<p><strong>💡 表达升级点：</strong>${data.表达升级点}</p>`;
       }
-      
-      // 生词详情
-      if (lastData.生词.length > 0) {
-        previewHTML += '<div style="margin-bottom: 15px;"><strong>📚 生词</strong><br>';
-        lastData.生词.forEach((vocab, index) => {
-          previewHTML += `<div style="background: rgba(232,245,232,0.5); padding: 8px; margin: 5px 0; border-radius: 6px; border-left: 3px solid #4caf50;">`;
-          previewHTML += `<strong>${vocab.词汇 || ''}</strong> `;
-          if (vocab.读音) {
-            previewHTML += `<small style="color: #666;">(${vocab.读音})</small>`;
-          }
-          previewHTML += '<br>';
-          if (vocab.中文解释) {
-            previewHTML += `<small>${vocab.中文解释}</small><br>`;
-          }
-          if (vocab.例句) {
-            previewHTML += `<small style="color: #555;">例: ${vocab.例句}</small>`;
-          }
-          previewHTML += '</div>';
+
+      // 错误记录
+      if (data.错误记录 && data.错误记录.length) {
+        html += `<div style="margin-top:1em"><strong style="color:#c62828">❌ 错误记录：</strong>`;
+        data.错误记录.forEach((err, i) => {
+          html += `<div style="margin-top:0.5em; font-size:0.95em">
+            <div>${i+1}. <strong>${err['错误名称'] || '错误'}</strong></div>
+            <div style="color:#666; padding-left:1em">❌ ${err['典型错误说明']}</div>
+            <div style="color:#2e7d32; padding-left:1em">✅ ${err['正确表达模式']}</div>
+          </div>`;
         });
-        previewHTML += '</div>';
+        html += `</div>`;
       }
-      
-      previewHTML += '</div>';
-      
-      preview.innerHTML = previewHTML;
+
+      // 生词
+      if (data.生词 && data.生词.length) {
+        html += `<div style="margin-top:1em"><strong style="color:#1565c0">📖 生词：</strong>`;
+        data.生词.forEach(word => {
+          html += `<div style="margin-top:0.5em">
+            <strong>${word['词汇']}</strong> <small>[${word['读音']}]</small> ${word['中文解释']}
+            <div style="color:#666; font-size:0.9em; padding-left:1em">Example: ${word['例句']}</div>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+
+      preview.innerHTML = html;
       syncBtn.disabled = false;
-      generationArea.style.display = 'block';
+      syncResult.textContent = '（等待同步...）';
+      
+      // 显示复制按钮
       copyPreviewBtn.style.display = 'block';
-      syncResult.textContent = '';
-      imageResult.style.display = 'none';
-      imagePreview.innerHTML = '';
+      
+      // 滚动到预览区域
+      preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    
+    // 复制预览文本功能
+    copyPreviewBtn.addEventListener('click', () => {
+      if (!preview.innerText || preview.innerText === '（解析结果会出现在这里）') return;
+      
+      navigator.clipboard.writeText(preview.innerText).then(() => {
+        const originalText = copyPreviewBtn.textContent;
+        copyPreviewBtn.textContent = '已复制!';
+        copyPreviewBtn.classList.add('success');
+        setTimeout(() => {
+          copyPreviewBtn.textContent = originalText;
+          copyPreviewBtn.classList.remove('success');
+        }, 2000);
+      }).catch(err => {
+        console.error('复制失败:', err);
+        alert('复制失败，请手动复制');
+      });
     });
 
     syncBtn.addEventListener('click', async () => {
       if (!lastData) return;
+
       syncBtn.disabled = true;
-      syncResult.textContent = '正在同步…';
+      syncBtn.textContent = '同步中...';
+      
       try {
         const res = await fetch(`${WORKER_URL}/sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(lastData)
         });
-        const json = await res.json();
-        syncResult.textContent = json.ok ? '✅ 同步成功！' : `❌ 同步失败：${json.error}`;
-        if (json.ok) fireworks();
+
+        const result = await res.json();
+        
+        if (result.ok) {
+          syncResult.innerHTML = `<span style="color:green">✅ ${result.message}</span>`;
+          // 成功特效
+          createFireworks();
+        } else {
+          throw new Error(result.error);
+        }
       } catch (err) {
-        syncResult.textContent = `❌ 网络错误：${err.message}`;
+        syncResult.innerHTML = `<span style="color:red">❌ 同步失败: ${err.message}</span>`;
       } finally {
         syncBtn.disabled = false;
+        syncBtn.textContent = '同步到 Notion';
       }
     });
+    
+    // 简单的烟花特效
+    function createFireworks() {
+      const container = document.getElementById('fireworks');
+      const rect = syncResult.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
 
-    // 小红书图片生成功能（基于字段映射）
-    let currentCardBlobs = null; // 保存当前生成的卡片
-    let previewUrls = []; // 保存当前预览的URL，以便清理
-    
-    generateImageBtn.addEventListener('click', async () => {
-      if (!lastData) return;
-      
-      // 获取选择的风格
-      const selectedStyle = document.querySelector('input[name="cardStyle"]:checked').value;
-      
-      generateImageBtn.disabled = true;
-      generateImageBtn.textContent = '🎨 正在生成...';
-      imageResult.style.display = 'block';
-      imageStatus.textContent = `🎨 正在生成 ${selectedStyle === 'linear' ? 'Linear' : 'Knowledge'} 风格图片（4张）…`;
-      imagePreview.innerHTML = '';
-      document.getElementById('saveAllBtn').style.display = 'none';
-      
-      // 清理旧的URL
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
-      previewUrls = [];
-      
-      try {
-        // 生成所有4张卡片
-        const cardBlobs = await generateAllCards(lastData, selectedStyle);
-        currentCardBlobs = cardBlobs;
+      for (let i = 0; i < 20; i++) {
+        const spark = document.createElement('div');
+        spark.className = 'spark';
+        spark.style.left = x + 'px';
+        spark.style.top = y + 'px';
+        spark.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
         
-        // 显示所有4张卡片预览
-        const previewContainer = document.createElement('div');
-        previewContainer.style.display = 'flex';
-        previewContainer.style.flexWrap = 'nowrap';
-        previewContainer.style.overflowX = 'auto';
-        previewContainer.style.justifyContent = 'flex-start';
-        previewContainer.style.gap = '15px';
-        previewContainer.style.marginTop = '20px';
-        previewContainer.style.paddingBottom = '15px'; // 为滚动条留出空间
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 50 + Math.random() * 100;
         
-        cardBlobs.forEach((blob, index) => {
-          const cardDiv = document.createElement('div');
-          cardDiv.style.textAlign = 'center';
-          cardDiv.style.margin = '0';
-          cardDiv.style.flexShrink = '0'; // 防止卡片被压缩
-          
-          const img = document.createElement('img');
-          const previewUrl = URL.createObjectURL(blob);
-          previewUrls.push(previewUrl);
-          img.src = previewUrl;
-          img.style.maxWidth = '180px';
-          img.style.maxHeight = '240px';
-          img.style.borderRadius = '8px';
-          img.style.boxShadow = '0 4px 12px var(--shadow)';
-          img.style.cursor = 'pointer';
-          img.title = `卡片 ${index + 1} (点击保存，右键复制)`;
-          
-          // 点击可以单独下载单张卡片
-          img.addEventListener('click', () => {
-            const title = lastData.标题 || 'japanese-expression';
-            const safeTitle = title.replace(/[^\u4e00-\u9fa5a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF]/g, '_');
-            const date = new Date().toISOString().split('T')[0];
-            const filename = `${date}_${safeTitle}_卡片${index + 1}.png`; // 需求要求PNG
-            downloadImage(blob, filename);
-          });
-          
-          const label = document.createElement('p');
-          label.textContent = `卡片 ${index + 1}`;
-          label.style.margin = '5px 0 0 0';
-          label.style.fontSize = '12px';
-          label.style.color = '#666';
-          
-          cardDiv.appendChild(img);
-          cardDiv.appendChild(label);
-          previewContainer.appendChild(cardDiv);
-        });
+        spark.style.setProperty('--x', Math.cos(angle) * dist + 'px');
+        spark.style.setProperty('--y', Math.sin(angle) * dist + 'px');
         
-        imagePreview.appendChild(previewContainer);
-        
-        imageStatus.textContent = '✅ 4张卡片生成成功！点击卡片可单独下载，或点击下方按钮保存所有。';
-        
-        // 显示保存所有按钮
-        document.getElementById('saveAllBtn').style.display = 'inline-block';
-        
-      } catch (err) {
-        imageStatus.textContent = `❌ 图片生成失败：${err.message}`;
-        console.error('图片生成错误:', err);
-      } finally {
-        generateImageBtn.disabled = false;
-        generateImageBtn.textContent = '✨ 生成小红书分享图片';
+        container.appendChild(spark);
+        setTimeout(() => spark.remove(), 600);
       }
-    });
+    }
     
-    // 保存所有卡片按钮
-    document.getElementById('saveAllBtn').addEventListener('click', () => {
-      console.log('保存所有卡片按钮被点击');
-      console.log('currentCardBlobs:', currentCardBlobs);
-      console.log('lastData:', lastData);
+    // 移动端优化：自动调整输入框高度
+    function adjustTextareaHeight() {
+      const lineHeight = parseInt(getComputedStyle(input).lineHeight);
+      const minHeight = 120;
+      const maxHeight = 300;
       
-      if (!currentCardBlobs || !lastData) {
-        console.log('条件不满足，不执行保存');
-        return;
-      }
+      input.style.height = 'auto';
+      const newHeight = Math.max(minHeight, Math.min(maxHeight, input.scrollHeight));
+      input.style.height = newHeight + 'px';
+    }
+    
+    // 移动端触摸优化
+    if ('ontouchstart' in window) {
+      // 为触摸设备添加快速滚动到顶部功能
+      let touchStartY = 0;
+      let touchEndY = 0;
       
-      console.log('开始保存所有卡片');
-      const title = lastData.标题 || 'japanese-expression';
-      const safeTitle = title.replace(/[^\u4e00-\u9fa5a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF]/g, '_');
-      const date = new Date().toISOString().split('T')[0];
-      
-      console.log(`准备保存 ${currentCardBlobs.length} 张卡片`);
-      
-      currentCardBlobs.forEach((blob, index) => {
-        const filename = `${date}_${safeTitle}_卡片${index + 1}.png`;
-        console.log(`保存卡片 ${index + 1}: ${filename}`);
-        setTimeout(() => {
-          downloadImage(blob, filename);
-        }, index * 800); // 错开下载时间，增加延迟以避免浏览器阻止
+      document.addEventListener('touchstart', (e) => {
+        touchStartY = e.changedTouches[0].screenY;
       });
       
-      imageStatus.textContent = '✅ 所有卡片已保存！';
+      document.addEventListener('touchend', (e) => {
+        touchEndY = e.changedTouches[0].screenY;
+        // 快速下滑手势：滚动到顶部
+        if (touchEndY - touchStartY > 100 && Math.abs(touchEndY - touchStartY) > 50) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+      
+      // 防止双击缩放
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', (event) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+      
+      // 输入框获得焦点时自动调整视口
+      input.addEventListener('focus', () => {
+        setTimeout(() => {
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      });
+    }
+    
+    // 输入框内容变化时自动调整高度
+    input.addEventListener('input', adjustTextareaHeight);
+    
+    // 窗口大小改变时重新调整
+    window.addEventListener('resize', () => {
+      setTimeout(adjustTextareaHeight, 100);
     });
-  </script>
-  <!-- 引入html2canvas库 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script>
-    // 小烟花庆祝
-    function fireworks() {
-      const fw = document.getElementById('fireworks');
-      const colors = ['#ffcc00','#ff6b6b','#4ecdc4','#45b7d1'];
-      for (let i = 0; i < 30; i++) {
-        const s = document.createElement('div');
-        s.className = 'spark';
-        s.style.left = (innerWidth/2 + (Math.random()-.5)*200) + 'px';
-        s.style.top = (innerHeight/2 + (Math.random()-.5)*200) + 'px';
-        s.style.background = colors[i % colors.length];
-        s.style.setProperty('--x', (Math.random()-.5)*200 + 'px');
-        s.style.setProperty('--y', (Math.random()-.5)*200 + 'px');
-        fw.appendChild(s);
-        setTimeout(() => s.remove(), 600);
+    
+    // 页面加载完成后调整一次
+    window.addEventListener('load', adjustTextareaHeight);
+    
+    // 防止意外的页面刷新（移动端常见）
+    let isFormDirty = false;
+    input.addEventListener('input', () => {
+      isFormDirty = true;
+    });
+    
+    window.addEventListener('beforeunload', (e) => {
+      if (isFormDirty && input.value.trim()) {
+        e.preventDefault();
+        e.returnValue = '';
       }
+    });
+    
+    // 键盘快捷键优化（移动端隐藏）
+    if (window.innerWidth > 768) {
+      input.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'Enter') {
+          e.preventDefault();
+          parseBtn.click();
+        }
+      });
     }
   </script>
 </body>

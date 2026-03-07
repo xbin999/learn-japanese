@@ -75,9 +75,21 @@ function parseItems(block, splitter) {
     .map(chunk => {
       const lines = chunk.trim().split('\n');
       const obj = {};
+      let currentKey = null;
+
       lines.forEach(l => {
-        const m = l.trim().match(/^(.+?)：(.+)/);
-        if (m) obj[m[1]] = m[2].trim();
+        const line = l.trim();
+        if (!line) return;
+
+        // 匹配 "Key：Value"
+        const m = line.match(/^(.+?)：(.*)/);
+        if (m) {
+          currentKey = m[1].trim();
+          obj[currentKey] = m[2].trim();
+        } else if (currentKey) {
+          // 如果不是 Key:Value 格式，且已有 Key，则追加到 Value（支持多行）
+          obj[currentKey] += '\n' + line;
+        }
       });
       return obj;
     });
