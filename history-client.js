@@ -38,7 +38,14 @@ export async function loadHistory(reset = false, query = '') {
   }
 
   try {
-    const url = new URL(`${WORKER_URL}/history`);
+    // 修复URL构造：处理空WORKER_URL的情况
+    let endpoint = WORKER_URL || '';
+    if (endpoint && !endpoint.endsWith('/')) {
+      endpoint += '/';
+    }
+    endpoint += 'history';
+    
+    const url = new URL(endpoint, window.location.origin);
     url.searchParams.set('limit', '10');
     if (nextCursor) {
       url.searchParams.set('cursor', nextCursor);
