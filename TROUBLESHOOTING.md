@@ -47,11 +47,28 @@ npx wrangler dev --port 8787 --local-protocol http
 
 **现象**: `Failed to construct 'URL': Invalid URL`
 
-**原因**: WORKER_URL配置问题
+**原因**: 
+1. `WORKER_URL` 为空字符串时 `new URL()` 构造绝对路径失败
+2. 浏览器缓存了旧版本的 JS 文件
 
-**解决**: 检查config.js配置，确保正确处理空字符串情况
+**解决**: 
+1. 代码中已改为使用相对路径 `/history` 拼接字符串，避开 `new URL()` 问题
+2. **强制刷新浏览器缓存**：
+   - Windows/Linux: `Ctrl + F5` 或 `Ctrl + Shift + R`
+   - macOS: `Cmd + Shift + R`
+   - 移动端: 清除浏览器数据或使用无痕模式测试
 
-## 5. 服务启动顺序
+## 5. 自定义域名跨域 (CORS) 错误
+
+**现象**: `Failed to fetch` 或 `CORS policy: No 'Access-Control-Allow-Origin' header`
+
+**原因**: 后端 Worker 只允许了 `localhost` 和配置的 `FRONTEND_URL`，未包含自定义域名
+
+**解决**: 
+- 后端代码已更新宽松的 CORS 策略，支持 `*.pages.dev` 和自定义域名
+- 确保 Cloudflare 后台的环境变量 `FRONTEND_URL` 配置正确（可选）
+
+## 6. 服务启动顺序
 
 **推荐顺序**:
 1. 先启动后端: `npx wrangler dev --port 8787 --local-protocol http`
