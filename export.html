@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%93%93%3C/text%3E%3C/svg%3E" />
+  <title>日语表达 - 导出复盘</title>
+  <style>
+    :root {
+      --paper: #fdfaf3;
+      --ink: #2e1d19;
+      --ink-soft: rgba(46,29,25,0.72);
+      --accent: #d6c1b4;
+      --accent-strong: #b07a62;
+      --card: rgba(255,255,255,0.72);
+      --card-strong: rgba(255,255,255,0.9);
+      --border: rgba(46,29,25,0.12);
+      --shadow: rgba(62,39,35,.08);
+      --shadow-strong: rgba(62,39,35,.16);
+      --handwriting: 'Kalam', cursive;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--paper);
+      background-image:
+        radial-gradient(1200px 800px at 8% -10%, rgba(255,255,255,0.8), transparent 60%),
+        radial-gradient(900px 600px at 95% 0%, rgba(255,230,214,0.6), transparent 62%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d6c1b4' fill-opacity='.13'%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      color: var(--ink);
+      font-family: 'Noto Sans SC', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem calc(3rem + env(safe-area-inset-bottom));
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    h1 {
+      font-family: var(--handwriting);
+      font-size: 2.2rem;
+      margin: 0 0 1.5rem;
+      letter-spacing: 1px;
+      color: var(--ink);
+    }
+
+    .nav-bar {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 2rem;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(46,29,25,0.08);
+      border-radius: 999px;
+      padding: 0.35rem 0.5rem;
+      box-shadow: 0 8px 20px rgba(62,39,35,0.06);
+    }
+
+    .nav-link {
+      color: var(--ink);
+      text-decoration: none;
+      border: 1px solid transparent;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      opacity: 0.78;
+      transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+      opacity: 1;
+      background: rgba(255,255,255,0.7);
+      border-color: rgba(46,29,25,0.12);
+    }
+
+    .nav-link.active {
+      opacity: 1;
+      background: var(--card-strong);
+      border-color: rgba(46,29,25,0.15);
+    }
+
+    .glass-card {
+      background: var(--card);
+      backdrop-filter: blur(10px) saturate(180%);
+      border: 1px solid rgba(46,29,25,0.08);
+      border-radius: 18px;
+      box-shadow: 0 12px 32px var(--shadow);
+      padding: 1.6rem;
+      width: 100%;
+      max-width: 1040px;
+      margin-bottom: 1.6rem;
+      box-sizing: border-box;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+
+    .filters label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+    }
+
+    .filters input[type="date"] {
+      min-height: 36px;
+      padding: 0.2rem 0.6rem;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      outline: none;
+      background: rgba(255,255,255,0.85);
+      color: var(--ink);
+      transition: all 0.2s ease;
+    }
+
+    .filters input[type="date"]:focus {
+      border-color: rgba(176,122,98,0.4);
+      box-shadow: 0 0 0 3px rgba(176,122,98,0.2);
+      background: rgba(255,255,255,0.98);
+    }
+
+    .layout-container {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.95fr) minmax(320px, 1.05fr);
+      gap: 2rem;
+      width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .layout-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .history-column {
+      border-right: 1px dashed rgba(0,0,0,0.1);
+      padding-right: 2rem;
+      min-width: 0;
+    }
+
+    @media (max-width: 900px) {
+      .history-column {
+        border-right: none;
+        border-bottom: 1px dashed rgba(0,0,0,0.1);
+        padding-right: 0;
+        padding-bottom: 2rem;
+      }
+    }
+
+    .history-card {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(46,29,25,0.08);
+      border-radius: 14px;
+      padding: 0.9rem;
+      margin-bottom: 0.8rem;
+      transition: all 0.2s;
+      max-width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .history-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 18px rgba(46,29,25,0.08);
+      background: rgba(255,255,255,0.95);
+      border-color: rgba(176,122,98,0.35);
+    }
+
+    .history-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+      gap: 0.6rem;
+    }
+
+    .history-date { font-size: 0.8rem; color: var(--ink-soft); }
+    .history-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+    .tag { background: rgba(214,193,180,0.35); color: var(--ink); font-size: 0.75rem; padding: 2px 6px; border-radius: 6px; }
+    .history-title { margin: 0 0 0.4rem; font-size: 1.05rem; color: var(--ink); }
+    .history-preview { margin: 0; font-size: 0.88rem; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .detail-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-width: 0;
+    }
+
+    .section-title {
+      font-weight: bold;
+      margin-bottom: 0.4rem;
+      color: var(--ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: 0.2px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 1rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.6);
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      outline: none;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      border-color: rgba(176,122,98,0.4);
+      box-shadow: 0 0 0 3px rgba(176,122,98,0.2);
+      background: rgba(255,255,255,0.9);
+    }
+
+    button {
+      border: none;
+      border-radius: 24px;
+      padding: 0.6rem 1.4rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.6);
+      color: var(--ink);
+      position: relative;
+      overflow: hidden;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible {
+      outline: 3px solid rgba(176,122,98,0.35);
+      outline-offset: 2px;
+    }
+
+    button.primary { background: var(--ink); color: var(--paper); box-shadow: 0 8px 18px rgba(46,29,25,0.18); }
+    button.secondary { background: rgba(255,255,255,0.6); color: var(--ink); border: 2px solid rgba(176,122,98,0.25); }
+    button.secondary:hover { background: rgba(214,193,180,0.55); }
+    button.success { background: #4caf50; color: white; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .selection-info {
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      margin-left: 0.4rem;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1.5rem 1rem calc(1.8rem + env(safe-area-inset-bottom));
+        background-size: 40px 40px;
+      }
+
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 1.2rem;
+        text-align: center;
+      }
+
+      .nav-bar {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .nav-link {
+        flex: 1 1 auto;
+        text-align: center;
+      }
+
+      .glass-card {
+        padding: 1.2rem;
+        border-radius: 12px;
+        backdrop-filter: blur(6px);
+      }
+
+      .layout-container {
+        gap: 1.5rem;
+      }
+
+      .history-column {
+        padding-right: 0;
+        padding-bottom: 1.5rem;
+      }
+
+      .history-card {
+        padding: 0.8rem;
+        margin-bottom: 0.6rem;
+      }
+
+      .history-title {
+        font-size: 1rem;
+      }
+
+      .history-preview {
+        font-size: 0.85rem;
+      }
+
+      textarea {
+        min-height: 140px;
+        font-size: 1rem;
+      }
+
+      button {
+        padding: 0.8rem 1.2rem;
+        font-size: 0.95rem;
+        border-radius: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem 0.8rem calc(1.2rem + env(safe-area-inset-bottom));
+      }
+
+      h1 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+      }
+
+      .glass-card {
+        padding: 1rem;
+        border-radius: 10px;
+      }
+
+      .history-card {
+        padding: 0.6rem;
+      }
+
+      .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+      }
+
+      .history-title {
+        font-size: 0.95rem;
+      }
+
+      .history-preview {
+        font-size: 0.8rem;
+      }
+
+      textarea {
+        min-height: 120px;
+        font-size: 1rem;
+      }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .history-card:hover {
+        transform: none;
+        box-shadow: none;
+      }
+
+      .history-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      }
+
+      button:hover {
+        transform: none;
+        box-shadow: none;
+      }
+
+      button:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px var(--shadow);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>📦 导出复盘</h1>
+  <div class="nav-bar">
+    <a href="index.html" class="nav-link">📝 输入与同步</a>
+    <a href="share.html" class="nav-link">🔍 查询与分享</a>
+    <a href="export.html" class="nav-link active">📦 导出复盘</a>
+  </div>
+
+  <div class="glass-card">
+    <div class="filters">
+      <label>开始
+        <input type="date" id="startDate" />
+      </label>
+      <label>结束
+        <input type="date" id="endDate" />
+      </label>
+      <button id="searchBtn" class="primary">查询</button>
+      <button id="selectAllBtn" class="secondary">全选</button>
+      <button id="invertSelectionBtn" class="secondary">反选</button>
+      <button id="clearSelectionBtn" class="secondary">清空选择</button>
+      <span class="selection-info" id="selectionInfo">已选 0 条</span>
+    </div>
+
+    <div class="layout-container">
+      <div class="history-column">
+        <div class="section-title">📜 最近记录</div>
+        <div id="historyList">
+          <div style="text-align:center; color:#999; padding: 2rem;">加载中...</div>
+        </div>
+        <button id="loadMoreBtn" class="secondary" style="width: 100%; margin-top: 1rem; display: none;">加载更多</button>
+      </div>
+
+      <div class="detail-column">
+        <div>
+          <div class="section-title">🧩 模板</div>
+          <textarea id="templateEditor" placeholder="在这里编辑导出模板"></textarea>
+        </div>
+        <div>
+          <div class="section-title">📝 导出预览</div>
+          <textarea id="previewOutput" placeholder="选择记录后自动生成预览"></textarea>
+        </div>
+        <button id="exportBtn" class="success" disabled>导出 Markdown</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./export.js"></script>
+</body>
+</html>
