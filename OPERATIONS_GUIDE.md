@@ -1,8 +1,42 @@
 # 🚀 项目运维操作指南
 
-> 日常开发必备命令，一键启动/停止服务，Git工作流程，项目迁移指南
+> 日常开发必备命令、快速参考、服务启动与排查
 
 ---
+
+## 🎯 快速参考
+
+### 🚀 一键启动
+```bash
+# 启动前端
+python3 -m http.server 8080
+
+# 启动后端
+npx wrangler dev --port 8787 --local-protocol http
+```
+
+### ⏹️ 一键停止
+```bash
+# 停止所有服务
+lsof -ti:8080 | xargs kill -9; lsof -ti:8787 | xargs kill -9
+```
+
+### 📊 查看状态
+```bash
+# 检查服务状态
+lsof -i :8080; lsof -i :8787
+```
+
+### 🌐 访问地址
+- **前端应用**: http://localhost:8080
+- **后端 API**: http://localhost:8787
+- **分享页面**: http://localhost:8080/share.html
+- **导出复盘**: http://localhost:8080/export.html
+
+### 🧊 Trae sandbox 与刷新说明
+- Trae sandbox 只是命令执行的包装器，不是热刷新服务
+- 前端静态页面不会自动刷新，需要手动刷新浏览器
+- 看到改动没生效时，用硬刷新：macOS 是 `⌘ + Shift + R`
 
 ## 📋 服务概览
 
