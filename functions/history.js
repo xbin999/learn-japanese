@@ -5,6 +5,8 @@ export async function onRequestGet(context) {
   const limit = parseInt(url.searchParams.get('limit') || '10', 10);
   const cursor = url.searchParams.get('cursor');
   const title = url.searchParams.get('title');
+  const startDate = url.searchParams.get('start_date');
+  const endDate = url.searchParams.get('end_date');
 
   // 处理 CORS
   const corsHeaders = {
@@ -34,14 +36,41 @@ export async function onRequestGet(context) {
       queryBody.start_cursor = cursor;
     }
 
-    // 添加标题过滤
+    const filters = [];
+
     if (title) {
-      queryBody.filter = {
+      filters.push({
         property: '标题',
         title: {
           contains: title
         }
-      };
+      });
+    }
+
+    if (startDate) {
+      filters.push({
+        property: '日期',
+        date: {
+          on_or_after: startDate
+        }
+      });
+    }
+
+    if (endDate) {
+      filters.push({
+        property: '日期',
+        date: {
+          on_or_before: endDate
+        }
+      });
+    }
+
+    if (filters.length === 1) {
+      queryBody.filter = filters[0];
+    }
+
+    if (filters.length > 1) {
+      queryBody.filter = { and: filters };
     }
 
     // 调用 Notion API 查询数据库

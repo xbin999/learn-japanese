@@ -57,11 +57,11 @@ export function parseText(raw) {
 
   // 3. 错误记录
   const errBlock = getBlock('——错误记录——');
-  data.错误记录 = parseItems(errBlock, /\[错误\d+\]/);
+  data.错误记录 = parseErrors(errBlock);
 
   // 4. 生词
   const vocabBlock = getBlock('——生词——');
-  data.生词 = parseItems(vocabBlock, /\[单词\d+\]/);
+  data.生词 = parseVocab(vocabBlock);
 
   return data;
 }
@@ -93,4 +93,103 @@ function parseItems(block, splitter) {
       });
       return obj;
     });
+}
+
+function parseErrors(block) {
+  if (!block) return [];
+  if (/\[错误\d+\]/.test(block)) return parseItems(block, /\[错误\d+\]/);
+  const lines = block.split('\n').map(line => line.trim()).filter(Boolean);
+  const errors = [];
+  let current = {};
+  const pushCurrent = () => {
+    if (Object.keys(current).length) {
+      errors.push(current);
+      current = {};
+    }
+  };
+
+  lines.forEach(line => {
+    const reasonMatch = line.match(/^原因[:：](.*)$/);
+    if (reasonMatch) {
+      const reasonText = reasonMatch[1].trim();
+      if (reasonText) {
+        current['典型错误说明'] = current['典型错误说明']
+          ? `${current['典型错误说明']}\n${reasonText}`
+          : reasonText;
+      }
+      return;
+    }
+
+    const keyValue = line.match(/^(.+?)：(.*)/);
+    if (keyValue) {
+      current[keyValue[1].trim()] = keyValue[2].trim();
+      return;
+    }
+
+    if (line.includes('❌')) {
+      if (Object.keys(current).length) pushCurrent();
+      const name = line.replace('❌', '').trim();
+      if (name) current['错误名称'] = name;
+      return;
+    }
+
+    if (line.includes('✔') || line.includes('✅')) {
+      const correct = line.replace(/[✔✅]/g, '').trim();
+      if (correct) current['正确表达模式'] = correct;
+      return;
+    }
+
+    const description = line;
+    if (description) {
+      current['典型错误说明'] = current['典型错误说明']
+        ? `${current['典型错误说明']}\n${description}`
+        : description;
+    }
+
+  });
+
+  pushCurrent();
+  return errors;
+}
+
+function parseVocab(block) {
+  if (!block) return [];
+  if (/\[单词\d+\]/.test(block)) return parseItems(block, /\[单词\d+\]/);
+  const buildEntry = (lines) => {
+    const first = lines[0] || '';
+    let word = first;
+    let reading = '';
+    const match = first.match(/^(.*?)（(.*?)）$/) || first.match(/^(.*?)\((.*?)\)$/);
+    if (match) {
+      word = match[1].trim();
+      reading = match[2].trim();
+    }
+    const meaning = lines[1] || '';
+    const example = lines.length > 2 ? lines.slice(2).join('\n') : '';
+    return {
+      '词汇': word,
+      '读音': reading,
+      '中文解释': meaning,
+      '例句': example
+    };
+  };
+
+  const chunks = block.split(/\n\s*\n/).map(c => c.trim()).filter(Boolean);
+  if (chunks.length <= 1) {
+    const lines = block.split('\n').map(line => line.trim()).filter(Boolean);
+    if (lines.length > 2) {
+      return lines
+        .reduce((items, line, index) => {
+          if (index % 2 === 0) items.push([line]);
+          else items[items.length - 1].push(line);
+          return items;
+        }, [])
+        .map(linesPair => buildEntry(linesPair))
+        .filter(v => v['词汇'] || v['读音'] || v['中文解释'] || v['例句']);
+    }
+  }
+
+  return chunks
+    .map(chunk => buildEntry(chunk.split('\n').map(line => line.trim()).filter(Boolean)))
+    .filter(v => v['词汇'] || v['读音'] || v['中文解释'] || v['例句']);
 }

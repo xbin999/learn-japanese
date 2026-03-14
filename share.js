@@ -409,11 +409,11 @@ function handleSwipeGesture() {
     if (diff > 0 && currentRecordIndex < records.length - 1) {
       // 向左滑动 - 下一条记录
       currentRecordIndex++;
-      selectRecord(records[currentRecordIndex]);
+      selectRecordWithSwipe(records[currentRecordIndex], currentRecordIndex);
     } else if (diff < 0 && currentRecordIndex > 0) {
       // 向右滑动 - 上一条记录
       currentRecordIndex--;
-      selectRecord(records[currentRecordIndex]);
+      selectRecordWithSwipe(records[currentRecordIndex], currentRecordIndex);
     }
   }
 }

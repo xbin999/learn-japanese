@@ -67,7 +67,6 @@ export function generateCardHTML(expressionData, cardIndex, styleName = 'linear'
     throw new Error('expressionData 不能为空');
   }
   
-  const style = STYLES[styleName] || STYLES.linear;
   const { 分享标题, 进化过程, 最终定稿, 本次核心结构, 表达升级点, 学习总结, 错误记录, 生词, 我想表达 } = expressionData;
   
   // 解析进化过程版本
@@ -355,14 +354,6 @@ function parseUpgradePoints(upgradeText) {
 function extractChineseMeaning(japaneseText) {
   if (!japaneseText) return '日常表达...';
   return japaneseText.length > 20 ? japaneseText.substring(0, 20) + '...' : japaneseText + '...';
-}
-
-/**
- * 提取天数
- */
-function extractDayNumber(shareTitle) {
-  const match = shareTitle.match(/Day\s*(\d+)/i);
-  return match ? match[1] : null;
 }
 
 /**

@@ -37,8 +37,6 @@ export async function loadHistory(reset = false, query = '') {
     loadMoreBtn.disabled = true;
   }
 
-  let targetUrl = '';
-
   try {
     // -----------------------------------------------------------
     // 终极修复：完全避开 new URL() 构造绝对路径的复杂性

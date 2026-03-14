@@ -113,7 +113,9 @@ export default {
         const limit = parseInt(url.searchParams.get('limit') || '10', 10);
         const cursor = url.searchParams.get('cursor');
         const title = url.searchParams.get('title');
-        const data = await getNotionHistory(env, limit, cursor, title);
+        const startDate = url.searchParams.get('start_date');
+        const endDate = url.searchParams.get('end_date');
+        const data = await getNotionHistory(env, limit, cursor, title, startDate, endDate);
         return Response.json(data, { headers: corsHeaders });
       } catch (err) {
         console.error(err);
@@ -125,7 +127,7 @@ export default {
   }
 };
 
-async function getNotionHistory(env, limit, cursor, title) {
+async function getNotionHistory(env, limit, cursor, title, startDate, endDate) {
   const { NOTION_TOKEN, DATABASE_ID } = env;
   if (!NOTION_TOKEN || !DATABASE_ID) {
     throw new Error('Missing NOTION_TOKEN or DATABASE_ID');
@@ -145,13 +147,41 @@ async function getNotionHistory(env, limit, cursor, title) {
     queryBody.start_cursor = cursor;
   }
 
+  const filters = [];
+
   if (title) {
-    queryBody.filter = {
+    filters.push({
       property: '标题',
       title: {
         contains: title
       }
-    };
+    });
+  }
+
+  if (startDate) {
+    filters.push({
+      property: '日期',
+      date: {
+        on_or_after: startDate
+      }
+    });
+  }
+
+  if (endDate) {
+    filters.push({
+      property: '日期',
+      date: {
+        on_or_before: endDate
+      }
+    });
+  }
+
+  if (filters.length === 1) {
+    queryBody.filter = filters[0];
+  }
+
+  if (filters.length > 1) {
+    queryBody.filter = { and: filters };
   }
 
   const res = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
