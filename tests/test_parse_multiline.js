@@ -1,5 +1,5 @@
 
-import { parseText } from './parse.js';
+import { parseText } from '../parse.js';
 
 const raw = `
 ——错误记录—— 
