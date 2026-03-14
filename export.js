@@ -29,8 +29,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   template = await loadTemplate();
   templateEditor.value = template;
 
-  await loadHistory(true);
-
   searchBtn.addEventListener('click', () => loadHistory(true));
   loadMoreBtn.addEventListener('click', () => loadHistory(false));
   selectAllBtn.addEventListener('click', selectAll);

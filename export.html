@@ -395,13 +395,9 @@
     }
   </style>
 </head>
-<body>
+<body data-page="export">
   <h1>📦 导出复盘</h1>
-  <div class="nav-bar">
-    <a href="index.html" class="nav-link">📝 输入与同步</a>
-    <a href="share.html" class="nav-link">🔍 查询与分享</a>
-    <a href="export.html" class="nav-link active">📦 导出复盘</a>
-  </div>
+  <div id="navBar" class="nav-bar"></div>
 
   <div class="glass-card">
     <div class="filters">
@@ -422,7 +418,7 @@
       <div class="history-column">
         <div class="section-title">📜 最近记录</div>
         <div id="historyList">
-          <div style="text-align:center; color:#999; padding: 2rem;">加载中...</div>
+          <div style="text-align:center; color:#999; padding: 2rem;">点击查询加载记录</div>
         </div>
         <button id="loadMoreBtn" class="secondary" style="width: 100%; margin-top: 1rem; display: none;">加载更多</button>
       </div>
@@ -441,6 +437,7 @@
     </div>
   </div>
 
+  <script type="module" src="./nav.js"></script>
   <script type="module" src="./export.js"></script>
 </body>
 </html>

@@ -512,13 +512,9 @@
     }
   </style>
 </head>
-<body>
+<body data-page="share">
   <h1>🔍 查询与分享</h1>
-  <div class="nav-bar">
-    <a href="index.html" class="nav-link">📝 输入与同步</a>
-    <a href="share.html" class="nav-link active">🔍 查询与分享</a>
-    <a href="export.html" class="nav-link">📦 导出复盘</a>
-  </div>
+  <div id="navBar" class="nav-bar"></div>
 
   <div class="glass-card">
     <div class="layout-container">
@@ -580,6 +576,7 @@
   </div>
 
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script type="module" src="./nav.js"></script>
   <script type="module" src="./share.js"></script>
 </body>
 </html>

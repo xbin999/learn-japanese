@@ -505,13 +505,9 @@
     }
     </style>
 </head>
-<body>
+<body data-page="index">
   <h1>📓 日语表达记录</h1>
-  <div class="nav-bar">
-    <a href="index.html" class="nav-link active">📝 输入与同步</a>
-    <a href="share.html" class="nav-link">🔍 查询与分享</a>
-    <a href="export.html" class="nav-link">📦 导出复盘</a>
-  </div>
+  <div id="navBar" class="nav-bar"></div>
 
   <div class="glass-card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -537,6 +533,7 @@ V1: …"></textarea>
   
   <div id="fireworks"></div>
 
+  <script type="module" src="./nav.js"></script>
   <script type="module">
     import { parseText } from './parse.js';
     import { WORKER_URL } from './config.js';
