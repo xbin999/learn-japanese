@@ -772,65 +772,95 @@ async function htmlToImage(html, width, height) {
       document.body.appendChild(iframe);
       
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      iframeDoc.open();
-      iframeDoc.write(html);
-      iframeDoc.close();
-      
-      iframe.onload = async () => {
+      let settled = false;
+      let renderStarted = false;
+
+      const cleanup = () => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      };
+
+      const resolveOnce = (value) => {
+        if (settled) return;
+        settled = true;
+        resolve(value);
+        cleanup();
+      };
+
+      const rejectOnce = (error) => {
+        if (settled) return;
+        settled = true;
+        reject(error);
+        cleanup();
+      };
+
+      const startRender = async () => {
+        if (settled || renderStarted) return;
+        renderStarted = true;
         try {
           if (typeof html2canvas === 'undefined') {
-            reject(new Error('html2canvas library is missing'));
+            rejectOnce(new Error('html2canvas library is missing'));
             return;
           }
           
-          // 等待字体加载 (简单延迟)
-          await new Promise(r => setTimeout(r, 500)); // Increase delay for mobile
+          await new Promise(r => setTimeout(r, 500));
           
-          // Add timeout for html2canvas
           const canvasPromise = html2canvas(iframeDoc.body, {
             width: width,
             height: height,
-            scale: 1, // 已经是高分辨率尺寸，无需放大
+            scale: 1,
             useCORS: true,
             backgroundColor: null,
-            logging: false, // Disable logging in production
-            allowTaint: false, // Must be false to use toBlob
+            logging: false,
+            allowTaint: false,
           });
 
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Image generation timed out')), 10000)
+          const timeoutPromise = new Promise((_, rejectTimeout) => 
+            setTimeout(() => rejectTimeout(new Error('Image generation timed out')), 10000)
           );
 
           const canvas = await Promise.race([canvasPromise, timeoutPromise]);
           
           canvas.toBlob(blob => {
-            if (blob) resolve(blob);
-            else reject(new Error('Canvas to blob conversion failed'));
-          }, 'image/png'); // 需求要求PNG
+            if (blob) resolveOnce(blob);
+            else rejectOnce(new Error('Canvas to blob conversion failed'));
+          }, 'image/png');
         } catch (error) {
           console.error('html2canvas error:', error);
-          reject(error);
-        } finally {
-          // Clean up
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
+          rejectOnce(error);
         }
+      };
+
+      iframe.onload = () => {
+        startRender();
       };
       
       iframe.onerror = (e) => {
         console.error('Iframe error:', e);
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
-        }
-        reject(new Error('Iframe loading failed'));
+        rejectOnce(new Error('Iframe loading failed'));
       };
+
+      iframeDoc.open();
+      iframeDoc.write(html);
+      iframeDoc.close();
+
+      setTimeout(() => {
+        startRender();
+      }, 700);
+
+      setTimeout(() => {
+        if (!settled) {
+          rejectOnce(new Error('Iframe loading timed out'));
+        }
+      }, 4000);
     });
   } else {
     // Mock for Node.js
     return new Promise(resolve => resolve(new Blob([''], { type: 'image/png' })));
   }
 }
+
 
 /**
  * 生成单张卡片图片
@@ -862,16 +892,22 @@ export async function generateCardImage(expressionData, cardIndex, styleName = '
 /**
  * 生成所有四张卡片
  */
-export async function generateAllCards(expressionData, styleName = 'linear') {
+export async function generateAllCards(expressionData, styleName = 'linear', onProgress) {
   const cards = [];
   for (let i = 1; i <= 4; i++) {
     try {
+      if (typeof onProgress === 'function') {
+        onProgress(`正在生成第${i}张/4...`);
+      }
       const cardBlob = await generateCardImage(expressionData, i, styleName);
       cards.push(cardBlob);
     } catch (error) {
       console.error(`生成卡片${i}失败:`, error);
       throw error;
     }
+  }
+  if (typeof onProgress === 'function') {
+    onProgress('生成完成，正在渲染预览...');
   }
   return cards;
 }

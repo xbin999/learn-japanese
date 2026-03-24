@@ -1,4 +1,30 @@
-// 配置：本地开发用 localhost，生产环境使用相对路径（Cloudflare Pages 同源）
-export const WORKER_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:8787'
-  : ''; // 生产环境使用当前域名（Cloudflare Pages Functions）
+const params = new URLSearchParams(window.location.search);
+const workerParam = params.get('worker') || '';
+const isLocalhost = window.location.hostname === 'localhost';
+
+const readStoredWorkerUrl = () => {
+  try {
+    return window.localStorage.getItem('WORKER_URL') || '';
+  } catch (e) {
+    return '';
+  }
+};
+
+const writeStoredWorkerUrl = (value) => {
+  try {
+    window.localStorage.setItem('WORKER_URL', value);
+  } catch (e) {
+  }
+};
+
+let workerUrl = '';
+if (isLocalhost) {
+  workerUrl = 'http://localhost:8787';
+} else if (workerParam) {
+  workerUrl = workerParam;
+  writeStoredWorkerUrl(workerParam);
+} else {
+  workerUrl = readStoredWorkerUrl();
+}
+
+export const WORKER_URL = workerUrl;

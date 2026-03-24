@@ -97,3 +97,27 @@ lsof -ti:8080 | xargs kill -9; lsof -ti:8787 | xargs kill -9
 python3 -m http.server 8080 &
 npx wrangler dev --port 8787 --local-protocol http
 ```
+
+## 7. 局域网手机访问加载失败（Failed to fetch）
+
+**现象**: 手机访问 `share.html?worker=http://<电脑IP>:8787`，历史记录加载失败
+
+**原因**: 
+1. 后端只监听 `localhost`，手机无法访问
+2. 后端未放行局域网 Origin
+3. `worker` 参数缺失导致请求落到前端服务器
+
+**解决**: 
+- 后端启动时监听全部网卡
+```bash
+npx wrangler dev --port 8787 --local-protocol http --ip 0.0.0.0
+```
+- 手机访问时携带 worker 参数
+```
+http://<电脑内网IP>:8080/share.html?worker=http://<电脑内网IP>:8787
+```
+
+**验证**:
+```bash
+curl http://<电脑内网IP>:8787/history?limit=1
+```

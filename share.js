@@ -72,6 +72,16 @@ function getDefaultTemplate() {
 #日语学习 #日语表达`;
 }
 
+function isMobileDevice() {
+  return window.matchMedia('(max-width: 768px)').matches || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+function openImageInNewTab(blob) {
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
 function onRecordSelect(record, index) {
   currentRecord = record;
   
@@ -165,11 +175,15 @@ async function generateImages() {
   const status = document.getElementById('imageStatus');
   const preview = document.getElementById('imagePreview');
   const saveAllBtn = document.getElementById('saveAllBtn');
+  const tips = document.getElementById('imageTips');
+  const isMobile = isMobileDevice();
   
   btn.disabled = true;
   btn.textContent = '生成中...';
   resultArea.style.display = 'block';
   status.textContent = '正在准备数据...';
+  tips.textContent = '';
+  tips.style.display = 'none';
   preview.innerHTML = '';
   saveAllBtn.style.display = 'none';
   
@@ -193,6 +207,10 @@ async function generateImages() {
     });
     
     status.innerHTML = `<span style="color:green">✅ 生成完成！</span>`;
+    if (isMobile) {
+      tips.textContent = '移动端请长按图片保存到相册';
+      tips.style.display = 'block';
+    }
     
     // Convert Blob objects to URLs for display
     preview.innerHTML = '';
@@ -206,7 +224,13 @@ async function generateImages() {
       img.style.cursor = 'pointer';
       
       // Add click to download single image
-      img.onclick = () => downloadImage(blob, `${processedRecord.分享标题 || '日语表达'}_${index + 1}.png`);
+      img.onclick = () => {
+        if (isMobile) {
+          openImageInNewTab(blob);
+        } else {
+          downloadImage(blob, `${processedRecord.分享标题 || '日语表达'}_${index + 1}.png`);
+        }
+      };
       
       const wrapper = document.createElement('div');
       wrapper.style.display = 'inline-block';
@@ -218,6 +242,11 @@ async function generateImages() {
     // Show Save All button
     saveAllBtn.style.display = 'inline-block';
     saveAllBtn.onclick = () => {
+      if (isMobile) {
+        tips.textContent = '移动端无法批量保存，请逐张长按图片保存';
+        tips.style.display = 'block';
+        return;
+      }
       downloadMultipleImages(imageUrls, processedRecord.分享标题 || '日语表达');
     };
     

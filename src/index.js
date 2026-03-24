@@ -17,6 +17,11 @@ export default {
     // 4. 自定义域名 (jp.mathmind.homes) - 显式添加
     
     const isLocal = origin && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1'));
+    const isLan = origin && (
+      /^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin) ||
+      /^https?:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin) ||
+      /^https?:\/\/172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin)
+    );
     const isPagesDev = origin && origin.endsWith('.pages.dev');
     const isCustomDomain = origin && (origin === 'https://jp.mathmind.homes' || origin === 'http://jp.mathmind.homes');
     
@@ -24,7 +29,7 @@ export default {
     
     // 如果Origin不在白名单中，但符合我们的宽松规则，则允许它
     if (!allowedOrigins.includes(origin)) {
-      if (isLocal || isPagesDev || isCustomDomain) {
+      if (isLocal || isLan || isPagesDev || isCustomDomain) {
         allowOrigin = origin;
       } else {
         // 如果都不匹配，才回退到默认

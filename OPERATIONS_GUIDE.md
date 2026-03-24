@@ -14,6 +14,10 @@ python3 -m http.server 8080
 # 启动后端
 npx wrangler dev --port 8787 --local-protocol http
 ```
+```bash
+# 避免每次提示安装 wrangler
+npm i -D wrangler
+```
 
 ### ⏹️ 一键停止
 ```bash
