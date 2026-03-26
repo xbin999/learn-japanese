@@ -23,6 +23,10 @@
       --shadow: rgba(62,39,35,.08);
       --shadow-strong: rgba(62,39,35,.16);
       --handwriting: 'Kalam', cursive;
+      --nav-height: 68px;
+      --page-width: 1040px;
+      --page-header-height: 72px;
+      --page-content-min-height: 520px;
     }
 
     @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
@@ -39,33 +43,117 @@
         url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d6c1b4' fill-opacity='.13'%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
       color: var(--ink);
       font-family: 'Noto Sans SC', sans-serif;
+      overflow-x: hidden;
+    }
+
+    .app-layout {
+      min-height: 100vh;
+      padding: calc(var(--nav-height) + 1.8rem + env(safe-area-inset-top)) 1rem calc(3rem + env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 3rem 1rem calc(3rem + env(safe-area-inset-bottom));
-      overflow-x: hidden; /* Prevent horizontal scroll */
+      gap: 1.4rem;
+    }
+
+    .app-navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
+      height: var(--nav-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(253,250,243,0.92);
+      backdrop-filter: blur(14px) saturate(160%);
+      border-bottom: 1px solid rgba(46,29,25,0.08);
+      box-shadow: 0 6px 16px rgba(46,29,25,0.08);
+      z-index: 10;
+      padding: 0 1rem;
+    }
+
+    .nav-bar {
+      width: 100%;
+      max-width: var(--page-width);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .nav-brand {
+      font-family: var(--handwriting);
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
     }
 
     h1 {
       font-family: var(--handwriting);
-      font-size: 2.2rem;
-      margin: 0 0 1.5rem;
+      font-size: 2rem;
+      margin: 0;
       letter-spacing: 1px;
       color: var(--ink);
     }
-    
-    .nav-bar {
+
+    .page-container {
+      width: 100%;
+      max-width: var(--page-width);
       display: flex;
-      gap: 1rem;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .page-header {
+      min-height: var(--page-header-height);
+      display: flex;
+      align-items: center;
+    }
+
+    .page-content {
+      width: 100%;
+      min-height: var(--page-content-min-height);
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 0.6rem;
       flex-wrap: wrap;
+      align-items: center;
       justify-content: center;
-      margin-bottom: 2rem;
-      background: rgba(255,255,255,0.6);
-      border: 1px solid rgba(46,29,25,0.08);
+      flex: 1;
+    }
+
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(46,29,25,0.12);
       border-radius: 999px;
-      padding: 0.35rem 0.5rem;
-      box-shadow: 0 8px 20px rgba(62,39,35,0.06);
+      padding: 0.2rem 0.6rem;
+      white-space: nowrap;
+    }
+
+    .nav-user input {
+      min-height: 30px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.6rem;
+      outline: none;
+      background: rgba(255,255,255,0.85);
+      color: var(--ink);
+      font-size: 0.85rem;
+      width: 120px;
+    }
+
+    .nav-user-display {
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      white-space: nowrap;
     }
 
     .nav-link {
@@ -91,6 +179,39 @@
       border-color: rgba(46,29,25,0.15);
     }
 
+    @media (max-width: 760px) {
+      .nav-brand {
+        font-size: 0.95rem;
+      }
+
+      .nav-bar {
+        gap: 0.6rem;
+      }
+
+      .nav-links {
+        gap: 0.4rem;
+      }
+
+      .nav-link {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.82rem;
+      }
+
+      .nav-user {
+        padding: 0.15rem 0.4rem;
+        gap: 0.3rem;
+      }
+
+      .nav-user input {
+        width: 88px;
+        font-size: 0.78rem;
+      }
+
+      .nav-user-display {
+        font-size: 0.75rem;
+      }
+    }
+
     .glass-card {
       background: var(--card);
       backdrop-filter: blur(10px) saturate(180%);
@@ -99,7 +220,6 @@
       box-shadow: 0 12px 32px var(--shadow);
       padding: 1.6rem;
       width: 100%;
-      max-width: 1040px;
       margin-bottom: 1.6rem;
       box-sizing: border-box; /* Ensure padding is included in width */
     }
@@ -295,25 +415,17 @@
     
     /* 移动端优化 */
     @media (max-width: 768px) {
-      body {
-        padding: 1.5rem 1rem calc(1.8rem + env(safe-area-inset-bottom));
-        background-size: 40px 40px;
-      }
-      
-      h1 {
-        font-size: 1.6rem;
-        margin-bottom: 1.2rem;
-        text-align: center;
-      }
-      
-      .nav-bar {
-        width: 100%;
-        justify-content: center;
+      .app-layout {
+        padding: calc(var(--nav-height) + 1.2rem + env(safe-area-inset-top)) 1rem calc(2rem + env(safe-area-inset-bottom));
       }
 
-      .nav-link {
-        flex: 1 1 auto;
+      h1 {
+        font-size: 1.6rem;
         text-align: center;
+      }
+
+      .page-header {
+        justify-content: center;
       }
       
       .glass-card {
@@ -513,67 +625,79 @@
   </style>
 </head>
 <body data-page="share">
-  <h1>🔍 查询与分享</h1>
-  <div id="navBar" class="nav-bar"></div>
+  <header class="app-navbar">
+    <div id="navBar" class="nav-bar">
+      <div class="nav-brand">日语表达打磨系统</div>
+    </div>
+  </header>
 
-  <div class="glass-card">
-    <div class="layout-container">
-      <!-- 左侧：历史记录列表 -->
-      <div class="history-column">
-        <div class="section-title">📜 历史记录</div>
-        <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
-          <input type="text" id="searchInput" placeholder="搜索标题..." style="flex: 1; min-height: 36px; padding: 0.4rem 0.8rem; border-radius: 18px; border: 1px solid #ddd; outline: none;">
-          <button id="searchBtn" class="primary" style="padding: 0.4rem 1rem; font-size: 0.9rem;">搜索</button>
-        </div>
-        <div id="historyList">
-          <div style="text-align:center; color:#999; padding: 2rem;">请输入标题搜索或直接点击搜索加载最近记录</div>
-        </div>
-        <button id="loadMoreHistoryBtn" class="secondary" style="width: 100%; margin-top: 1rem; display: none;">加载更多</button>
+  <div class="app-layout">
+    <main class="page-container">
+      <div class="page-header">
+        <h1>查询与分享</h1>
       </div>
+      <div class="page-content">
+        <div class="glass-card">
+          <div class="layout-container">
+            <!-- 左侧：历史记录列表 -->
+            <div class="history-column">
+              <div class="section-title">📜 历史记录</div>
+              <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
+                <input type="text" id="searchInput" placeholder="搜索标题..." style="flex: 1; min-height: 36px; padding: 0.4rem 0.8rem; border-radius: 18px; border: 1px solid #ddd; outline: none;">
+                <button id="searchBtn" class="primary" style="padding: 0.4rem 1rem; font-size: 0.9rem;">搜索</button>
+              </div>
+              <div id="historyList">
+                <div style="text-align:center; color:#999; padding: 2rem;">请输入标题搜索或直接点击搜索加载最近记录</div>
+              </div>
+              <button id="loadMoreHistoryBtn" class="secondary" style="width: 100%; margin-top: 1rem; display: none;">加载更多</button>
+            </div>
 
-      <!-- 右侧：详情与生成 -->
-      <div class="detail-column" id="detailPanel" style="opacity: 0.5; pointer-events: none;">
-        
-        <!-- 文案生成区 -->
-        <div>
-          <div class="section-title">
-            <span>📝 小红书文案</span>
-            <button id="copyTextBtn" class="secondary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">复制文案</button>
-          </div>
-          <textarea id="xhsContent" placeholder="选择左侧记录后自动生成..."></textarea>
-          <div style="text-align: right; margin-top: 0.5rem;">
-            <small style="color: #666; cursor: pointer;" id="toggleTemplate">⚙️ 编辑模板</small>
-          </div>
-          <textarea id="templateEditor" style="display: none; height: 150px; margin-top: 0.5rem; font-family: monospace; font-size: 0.8rem;" placeholder="在这里编辑模板..."></textarea>
-        </div>
+            <!-- 右侧：详情与生成 -->
+            <div class="detail-column" id="detailPanel" style="opacity: 0.5; pointer-events: none;">
+              
+              <!-- 文案生成区 -->
+              <div>
+                <div class="section-title">
+                  <span>📝 小红书文案</span>
+                  <button id="copyTextBtn" class="secondary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">复制文案</button>
+                </div>
+                <textarea id="xhsContent" placeholder="选择左侧记录后自动生成..."></textarea>
+                <div style="text-align: right; margin-top: 0.5rem;">
+                  <small style="color: #666; cursor: pointer;" id="toggleTemplate">⚙️ 编辑模板</small>
+                </div>
+                <textarea id="templateEditor" style="display: none; height: 150px; margin-top: 0.5rem; font-family: monospace; font-size: 0.8rem;" placeholder="在这里编辑模板..."></textarea>
+              </div>
 
-        <!-- 图片生成区 -->
-        <div>
-          <div class="section-title">✨ 图片生成</div>
-          <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-            <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
-              <input type="radio" name="cardStyle" value="linear" checked> 
-              <span>Linear (极简)</span>
-            </label>
-            <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
-              <input type="radio" name="cardStyle" value="knowledge"> 
-              <span>Knowledge (知识)</span>
-            </label>
-          </div>
-          <button id="generateImageBtn" class="image-generate">生成分享图片</button>
-          
-          <div id="imageResult" style="display: none;">
-            <div id="imageStatus">正在生成...</div>
-            <div id="imageTips" style="display: none; margin-top: 0.5rem; color: #666; font-size: 0.85rem;"></div>
-            <div id="imagePreview" style="margin-top: 1rem; text-align: center;"></div>
-            <div id="saveAllCards" style="margin-top: 1rem; text-align: center;">
-              <button id="saveAllBtn" class="success" style="display: none; padding: 0.4rem 1rem;">保存所有</button>
+              <!-- 图片生成区 -->
+              <div>
+                <div class="section-title">✨ 图片生成</div>
+                <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                  <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+                    <input type="radio" name="cardStyle" value="linear" checked> 
+                    <span>Linear (极简)</span>
+                  </label>
+                  <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+                    <input type="radio" name="cardStyle" value="knowledge"> 
+                    <span>Knowledge (知识)</span>
+                  </label>
+                </div>
+                <button id="generateImageBtn" class="image-generate">生成分享图片</button>
+                
+                <div id="imageResult" style="display: none;">
+                  <div id="imageStatus">正在生成...</div>
+                  <div id="imageTips" style="display: none; margin-top: 0.5rem; color: #666; font-size: 0.85rem;"></div>
+                  <div id="imagePreview" style="margin-top: 1rem; text-align: center;"></div>
+                  <div id="saveAllCards" style="margin-top: 1rem; text-align: center;">
+                    <button id="saveAllBtn" class="success" style="display: none; padding: 0.4rem 1rem;">保存所有</button>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
-
       </div>
-    </div>
+    </main>
   </div>
 
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>

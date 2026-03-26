@@ -23,6 +23,10 @@
       --shadow: rgba(62,39,35,.08);
       --shadow-strong: rgba(62,39,35,.16);
       --handwriting: 'Kalam', cursive;
+      --nav-height: 68px;
+      --page-width: 1040px;
+      --page-header-height: 72px;
+      --page-content-min-height: 520px;
     }
 
     /* 引入手写体（Google Fonts） */
@@ -40,31 +44,116 @@
         url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d6c1b4' fill-opacity='.13'%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
       color: var(--ink);
       font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .app-layout {
+      min-height: 100vh;
+      padding: calc(var(--nav-height) + 1.8rem + env(safe-area-inset-top)) 1rem calc(3rem + env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 3rem 1rem calc(3rem + env(safe-area-inset-bottom));
+      gap: 1.4rem;
+    }
+
+    .app-navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: var(--nav-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(253,250,243,0.92);
+      backdrop-filter: blur(14px) saturate(160%);
+      border-bottom: 1px solid rgba(46,29,25,0.08);
+      box-shadow: 0 6px 16px rgba(46,29,25,0.08);
+      z-index: 10;
+      padding: 0 1rem;
+    }
+
+    .nav-bar {
+      width: 100%;
+      max-width: var(--page-width);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .nav-brand {
+      font-family: var(--handwriting);
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
     }
 
     h1 {
       font-family: var(--handwriting);
-      font-size: 2.2rem;
-      margin: 0 0 1.5rem;
+      font-size: 2rem;
+      margin: 0;
       letter-spacing: 1px;
       color: var(--ink);
     }
 
-    .nav-bar {
+    .page-container {
+      width: 100%;
+      max-width: var(--page-width);
       display: flex;
-      gap: 1rem;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .page-header {
+      min-height: var(--page-header-height);
+      display: flex;
+      align-items: center;
+    }
+
+    .page-content {
+      width: 100%;
+      min-height: var(--page-content-min-height);
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 0.6rem;
       flex-wrap: wrap;
+      align-items: center;
       justify-content: center;
-      margin-bottom: 2rem;
-      background: rgba(255,255,255,0.6);
-      border: 1px solid rgba(46,29,25,0.08);
+      flex: 1;
+    }
+
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(46,29,25,0.12);
       border-radius: 999px;
-      padding: 0.35rem 0.5rem;
-      box-shadow: 0 8px 20px rgba(62,39,35,0.06);
+      padding: 0.2rem 0.6rem;
+      white-space: nowrap;
+    }
+
+    .nav-user input {
+      min-height: 30px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.6rem;
+      outline: none;
+      background: rgba(255,255,255,0.85);
+      color: var(--ink);
+      font-size: 0.85rem;
+      width: 120px;
+    }
+
+    .nav-user-display {
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      white-space: nowrap;
     }
 
     .nav-link {
@@ -90,6 +179,39 @@
       border-color: rgba(46,29,25,0.15);
     }
 
+    @media (max-width: 760px) {
+      .nav-brand {
+        font-size: 0.95rem;
+      }
+
+      .nav-bar {
+        gap: 0.6rem;
+      }
+
+      .nav-links {
+        gap: 0.4rem;
+      }
+
+      .nav-link {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.82rem;
+      }
+
+      .nav-user {
+        padding: 0.15rem 0.4rem;
+        gap: 0.3rem;
+      }
+
+      .nav-user input {
+        width: 88px;
+        font-size: 0.78rem;
+      }
+
+      .nav-user-display {
+        font-size: 0.75rem;
+      }
+    }
+
     /* 输入区毛玻璃卡片 */
     .glass-card {
       background: var(--card);
@@ -99,7 +221,6 @@
       box-shadow: 0 12px 32px var(--shadow);
       padding: 1.6rem;
       width: 100%;
-      max-width: 720px;
       margin-bottom: 1.6rem;
     }
 
@@ -274,25 +395,17 @@
 
     /* 移动端优先设计 */
     @media (max-width: 768px) {
-      body { 
-        padding: 1.5rem 1rem calc(1.8rem + env(safe-area-inset-bottom)); 
-        background-size: 40px 40px;
+      .app-layout { 
+        padding: calc(var(--nav-height) + 1.2rem + env(safe-area-inset-top)) 1rem calc(2rem + env(safe-area-inset-bottom));
       }
       
       h1 { 
         font-size: 1.6rem; 
-        margin-bottom: 1.2rem;
         text-align: center;
       }
 
-      .nav-bar {
-        width: 100%;
+      .page-header {
         justify-content: center;
-      }
-
-      .nav-link {
-        flex: 1 1 auto;
-        text-align: center;
       }
       
       .glass-card { 
@@ -506,161 +619,70 @@
     </style>
 </head>
 <body data-page="index">
-  <h1>📓 日语表达记录</h1>
-  <div id="navBar" class="nav-bar"></div>
-
-  <div class="glass-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-      <small style="color: var(--ink); opacity: 0.7;">💡 提示：Ctrl+A 全选，或点击右上角清除按钮</small>
-      <button id="clearBtn" class="secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">清除</button>
+  <header class="app-navbar">
+    <div id="navBar" class="nav-bar">
+      <div class="nav-brand">日语表达打磨系统</div>
     </div>
-    <div id="syncResult" class="note" style="margin-bottom: 1rem; text-align: center; font-weight: bold;">（同步结果会出现在这里）</div>
-    <textarea id="input" placeholder="标题：…
-主题：…
-——进化过程——
-V1: …"></textarea>
-    <div class="actions">
-      <button id="parseBtn" class="primary">解析</button>
-      <button id="syncBtn" class="secondary" disabled>同步到 Notion</button>
-    </div>
-  </div>
+  </header>
 
-  <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 .6rem;">
-    <h2 style="margin: 0;">便签预览</h2>
-    <button id="copyPreviewBtn" class="secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; display: none;">复制文本</button>
+  <div class="app-layout">
+    <main class="page-container">
+      <div class="page-header">
+        <h1>日语表达记录</h1>
+      </div>
+      <div class="page-content">
+        <div class="glass-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <small style="color: var(--ink); opacity: 0.7;">💡 提示：Ctrl+A 全选，或点击右上角清除按钮</small>
+            <button id="clearBtn" class="secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">清除</button>
+          </div>
+          <textarea id="input" placeholder='{"title":"","topic":"","intent":"","versions":{"v1":"","v2":"","v3":"","v4":""},"final":"","coreStructure":"","improvement":"","errors":[{"name":"","description":"","correctPattern":""}],"vocab":[{"word":"","reading":"","meaning":"","example":""}],"summary":"","shareTitle":""}'></textarea>
+          <div class="actions">
+            <button id="syncBtn" class="primary">同步到 Notion</button>
+          </div>
+        </div>
+
+        <div id="syncResult" class="note" style="margin-bottom: 1rem; text-align: center; font-weight: bold;">（同步结果会出现在这里）</div>
+        
+        <div id="fireworks"></div>
+      </div>
+    </main>
   </div>
-  <div id="preview" class="note">（解析结果会出现在这里）</div>
-  
-  <div id="fireworks"></div>
 
   <script type="module" src="./nav.js"></script>
   <script type="module">
-    import { parseText } from './parse.js';
     import { WORKER_URL } from './config.js';
+    import { ensureLearnerName } from './nav.js';
 
     const input = document.getElementById('input');
-    const preview = document.getElementById('preview');
     const syncResult = document.getElementById('syncResult');
-    const parseBtn = document.getElementById('parseBtn');
     const syncBtn = document.getElementById('syncBtn');
     const clearBtn = document.getElementById('clearBtn');
-    const copyPreviewBtn = document.getElementById('copyPreviewBtn');
-    
-    let lastData = null; // 保存最新解析结果
 
     // 清除按钮功能
     clearBtn.addEventListener('click', () => {
       input.value = '';
       input.focus();
-      preview.textContent = '（解析结果会出现在这里）';
       syncResult.textContent = '（同步结果会出现在这里）';
-      syncBtn.disabled = true;
-      copyPreviewBtn.style.display = 'none';
-      lastData = null;
     });
 
 
-    parseBtn.addEventListener('click', () => {
-      const text = input.value;
-      if (!text.trim()) {
-        alert('请先粘贴文本');
-        return;
-      }
-
-      const data = parseText(text);
-      lastData = data; // 保存解析结果
-      
-      // 生成预览HTML
-      let html = `
-        <div style="margin-bottom:1em">
-          <strong style="font-size:1.2em">${data.标题 || '无标题'}</strong>
-          <span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:0.8em; margin-left:8px">${data.主题 || '未分类'}</span>
-        </div>
-      `;
-
-      if (data.分享标题) html += `<p><strong>📌 分享标题：</strong>${data.分享标题}</p>`;
-      if (data.学习总结) html += `<p><strong>📝 学习总结：</strong>${data.学习总结}</p>`;
-
-      if (data.进化过程) {
-        html += `<div style="margin:1em 0; padding-left:1em; border-left:3px solid var(--accent)">
-          <div style="font-weight:bold; margin-bottom:0.5em">🔄 进化过程</div>
-          <div style="white-space:pre-wrap; font-family:monospace; font-size:0.9em">${data.进化过程}</div>
-        </div>`;
-      }
-
-      if (data.最终定稿) {
-        html += `<div style="margin:1em 0; background:rgba(255,255,255,0.5); padding:1em; border-radius:8px">
-          <div style="font-weight:bold; color:#2e7d32">✅ 最终定稿</div>
-          <div style="font-size:1.1em; margin-top:0.5em">${data.最终定稿}</div>
-        </div>`;
-      }
-
-      // 核心结构
-      if (data.本次核心结构) {
-        html += `<p><strong>🔑 核心结构：</strong>${data.本次核心结构}</p>`;
-      }
-
-      // 表达升级点
-      if (data.表达升级点) {
-        html += `<p><strong>💡 表达升级点：</strong>${data.表达升级点}</p>`;
-      }
-
-      // 错误记录
-      if (data.错误记录 && data.错误记录.length) {
-        html += `<div style="margin-top:1em"><strong style="color:#c62828">❌ 错误记录：</strong>`;
-        data.错误记录.forEach((err, i) => {
-          html += `<div style="margin-top:0.5em; font-size:0.95em">
-            <div>${i+1}. <strong>${err['错误名称'] || '错误'}</strong></div>
-            <div style="color:#666; padding-left:1em">❌ ${err['典型错误说明'] || ''}</div>
-            <div style="color:#2e7d32; padding-left:1em">✅ ${err['正确表达模式'] || ''}</div>
-          </div>`;
-        });
-        html += `</div>`;
-      }
-
-      // 生词
-      if (data.生词 && data.生词.length) {
-        html += `<div style="margin-top:1em"><strong style="color:#1565c0">📖 生词：</strong>`;
-        data.生词.forEach(word => {
-          html += `<div style="margin-top:0.5em">
-            <strong>${word['词汇'] || ''}</strong> <small>[${word['读音'] || ''}]</small> ${word['中文解释'] || ''}
-            <div style="color:#666; font-size:0.9em; padding-left:1em">Example: ${word['例句'] || ''}</div>
-          </div>`;
-        });
-        html += `</div>`;
-      }
-
-      preview.innerHTML = html;
-      syncBtn.disabled = false;
-      syncResult.textContent = '（等待同步...）';
-      
-      // 显示复制按钮
-      copyPreviewBtn.style.display = 'block';
-      
-      // 滚动到预览区域
-      preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-    
-    // 复制预览文本功能
-    copyPreviewBtn.addEventListener('click', () => {
-      if (!preview.innerText || preview.innerText === '（解析结果会出现在这里）') return;
-      
-      navigator.clipboard.writeText(preview.innerText).then(() => {
-        const originalText = copyPreviewBtn.textContent;
-        copyPreviewBtn.textContent = '已复制!';
-        copyPreviewBtn.classList.add('success');
-        setTimeout(() => {
-          copyPreviewBtn.textContent = originalText;
-          copyPreviewBtn.classList.remove('success');
-        }, 2000);
-      }).catch(err => {
-        console.error('复制失败:', err);
-        alert('复制失败，请手动复制');
-      });
-    });
 
     syncBtn.addEventListener('click', async () => {
-      if (!lastData) return;
+      const text = input.value;
+      if (!text.trim()) {
+        alert('请先粘贴 JSON');
+        return;
+      }
+      let rawJson;
+      try {
+        rawJson = JSON.parse(text);
+      } catch (err) {
+        alert('JSON 解析失败，请检查格式');
+        return;
+      }
+      const learnerName = ensureLearnerName();
+      if (!learnerName) return;
 
       syncBtn.disabled = true;
       syncBtn.textContent = '同步中...';
@@ -669,7 +691,7 @@ V1: …"></textarea>
         const res = await fetch(`${WORKER_URL}/sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(lastData)
+          body: JSON.stringify({ ...rawJson, 学习者: learnerName })
         });
 
         const result = await res.json();
