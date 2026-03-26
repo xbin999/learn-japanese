@@ -2,6 +2,7 @@
  * Cloudflare Pages Function：接收前端解析结果 → 写入 Notion 数据库
  * 路由：POST /sync
  */
+import { parseText } from '../parse.js';
 
 // 处理 CORS
 const corsHeaders = {
@@ -19,6 +20,7 @@ export async function onRequestPost(context) {
 
   try {
     const body = await request.json();
+    const normalized = parseText(body);
     
     // 验证环境变量
     const { NOTION_TOKEN, DATABASE_ID } = env;
@@ -30,19 +32,20 @@ export async function onRequestPost(context) {
     const payload = {
       parent: { database_id: DATABASE_ID },
       properties: {
-        标题: { title: [{ text: { content: body.标题 || '无标题' } }] },
-        主题: { multi_select: body.主题 ? body.主题.split(/[,，]/).map(s => ({ name: s.trim() })) : [] },
-        我想表达: { rich_text: [{ text: { content: body.我想表达 || '' } }] },
-        进化过程: { rich_text: [{ text: { content: body.进化过程 || '' } }] },
-        最终定稿: { rich_text: [{ text: { content: body.最终定稿 || '' } }] },
-        本次核心结构: { rich_text: [{ text: { content: body.本次核心结构 || '' } }] },
-        表达升级点: { rich_text: [{ text: { content: body.表达升级点 || '' } }] },
-        错误记录: { rich_text: [{ text: { content: errorsToMarkdown(body.错误记录 || []) } }] },
-        生词: { rich_text: [{ text: { content: vocabToMarkdown(body.生词 || []) } }] },
-        学习总结: { rich_text: [{ text: { content: body.学习总结 || '' } }] },
-        分享标题: { rich_text: [{ text: { content: body.分享标题 || '' } }] },
+        标题: { title: [{ text: { content: normalized.标题 || '无标题' } }] },
+        主题: { multi_select: normalized.主题 ? normalized.主题.split(/[,，]/).map(s => ({ name: s.trim() })) : [] },
+        我想表达: { rich_text: [{ text: { content: normalized.我想表达 || '' } }] },
+        进化过程: { rich_text: [{ text: { content: normalized.进化过程 || '' } }] },
+        最终定稿: { rich_text: [{ text: { content: normalized.最终定稿 || '' } }] },
+        本次核心结构: { rich_text: [{ text: { content: normalized.本次核心结构 || '' } }] },
+        表达升级点: { rich_text: [{ text: { content: normalized.表达升级点 || '' } }] },
+        错误记录: { rich_text: [{ text: { content: errorsToMarkdown(normalized.错误记录 || []) } }] },
+        生词: { rich_text: [{ text: { content: vocabToMarkdown(normalized.生词 || []) } }] },
+        学习总结: { rich_text: [{ text: { content: normalized.学习总结 || '' } }] },
+        分享标题: { rich_text: [{ text: { content: normalized.分享标题 || '' } }] },
         日期: { date: { start: new Date().toISOString().slice(0, 10) } },
-        来源: { select: { name: '同步' } }
+        来源: { select: { name: '同步' } },
+        ...(body.学习者 || body.learner ? { 学习者: { select: { name: body.学习者 || body.learner } } } : {})
       }
     };
 

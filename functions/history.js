@@ -7,6 +7,7 @@ export async function onRequestGet(context) {
   const title = url.searchParams.get('title');
   const startDate = url.searchParams.get('start_date');
   const endDate = url.searchParams.get('end_date');
+  const learner = url.searchParams.get('learner');
 
   // 处理 CORS
   const corsHeaders = {
@@ -61,6 +62,15 @@ export async function onRequestGet(context) {
         property: '日期',
         date: {
           on_or_before: endDate
+        }
+      });
+    }
+
+    if (learner) {
+      filters.push({
+        property: '学习者',
+        select: {
+          equals: learner
         }
       });
     }

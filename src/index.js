@@ -2,6 +2,8 @@
  * Cloudflare Worker：接收前端解析结果 → 写入 Notion 数据库
  * 路由：POST /sync
  */
+import { parseText } from '../parse.js';
+
 export default {
   async fetch(request, env) {
     // 统一 CORS 头：允许配置的前端地址调用
@@ -101,7 +103,9 @@ export default {
       }
       try {
         const body = await request.json();
-        await createNotionPage(body, env);
+        const normalized = parseText(body);
+        const learnerName = body.学习者 || body.learner || '';
+        await createNotionPage({ ...normalized, 学习者: learnerName }, env);
         return Response.json({ ok: true, message: '已同步到 Notion！' }, { headers: corsHeaders });
       } catch (err) {
         console.error(err);
@@ -120,7 +124,8 @@ export default {
         const title = url.searchParams.get('title');
         const startDate = url.searchParams.get('start_date');
         const endDate = url.searchParams.get('end_date');
-        const data = await getNotionHistory(env, limit, cursor, title, startDate, endDate);
+        const learner = url.searchParams.get('learner');
+        const data = await getNotionHistory(env, limit, cursor, title, startDate, endDate, learner);
         return Response.json(data, { headers: corsHeaders });
       } catch (err) {
         console.error(err);
@@ -132,7 +137,7 @@ export default {
   }
 };
 
-async function getNotionHistory(env, limit, cursor, title, startDate, endDate) {
+async function getNotionHistory(env, limit, cursor, title, startDate, endDate, learner) {
   const { NOTION_TOKEN, DATABASE_ID } = env;
   if (!NOTION_TOKEN || !DATABASE_ID) {
     throw new Error('Missing NOTION_TOKEN or DATABASE_ID');
@@ -177,6 +182,15 @@ async function getNotionHistory(env, limit, cursor, title, startDate, endDate) {
       property: '日期',
       date: {
         on_or_before: endDate
+      }
+    });
+  }
+
+  if (learner) {
+    filters.push({
+      property: '学习者',
+      select: {
+        equals: learner
       }
     });
   }
@@ -283,7 +297,8 @@ async function createNotionPage(data, env) {
       学习总结: { rich_text: [{ text: { content: data.学习总结 || '' } }] },
       分享标题: { rich_text: [{ text: { content: data.分享标题 || '' } }] },
       日期: { date: { start: new Date().toISOString().slice(0, 10) } },
-      来源: { select: { name: '同步' } }
+      来源: { select: { name: '同步' } },
+      ...(data.学习者 ? { 学习者: { select: { name: data.学习者 } } } : {})
     }
   };
 

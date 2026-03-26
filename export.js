@@ -1,4 +1,5 @@
 import { WORKER_URL } from './config.js';
+import { ensureLearnerName } from './nav.js';
 
 const startDateInput = document.getElementById('startDate');
 const endDateInput = document.getElementById('endDate');
@@ -20,12 +21,12 @@ let nextCursor = null;
 let hasMore = false;
 let isLoading = false;
 let template = '';
+let currentLearner = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const { start, end } = getDefaultDateRange();
   startDateInput.value = start;
   endDateInput.value = end;
-
   template = await loadTemplate();
   templateEditor.value = template;
 
@@ -107,6 +108,10 @@ function getDefaultTemplate() {
 
 async function loadHistory(reset) {
   if (isLoading) return;
+  if (reset) {
+    currentLearner = ensureLearnerName();
+    if (!currentLearner) return;
+  }
   isLoading = true;
 
   if (reset) {
@@ -133,6 +138,7 @@ async function loadHistory(reset) {
 
     if (startDate) params.set('start_date', startDate);
     if (endDate) params.set('end_date', endDate);
+    if (currentLearner) params.set('learner', currentLearner);
 
     const finalUrl = `${baseUrl}?${params.toString()}`;
     const res = await fetch(finalUrl);

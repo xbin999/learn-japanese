@@ -1,6 +1,7 @@
 
 import { initHistory, loadHistory } from './history-client.js';
 import { generateAllCards, downloadMultipleImages, downloadImage } from './image-generator.js';
+import { ensureLearnerName } from './nav.js';
 
 let currentRecord = null;
 let template = '';
@@ -25,17 +26,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 初始化历史记录
   initHistory('historyList', 'loadMoreHistoryBtn', onRecordSelect);
   // loadHistory(true); // 默认不加载
-
   // 绑定事件
   document.getElementById('searchBtn').addEventListener('click', () => {
-    const query = document.getElementById('searchInput').value.trim();
-    loadHistory(true, query);
+    triggerSearch();
   });
   
   document.getElementById('searchInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      const query = document.getElementById('searchInput').value.trim();
-      loadHistory(true, query);
+      triggerSearch();
     }
   });
 
@@ -47,6 +45,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('copyTextBtn').addEventListener('click', copyText);
   document.getElementById('generateImageBtn').addEventListener('click', generateImages);
 });
+
+function triggerSearch() {
+  const learnerName = ensureLearnerName();
+  if (!learnerName) return;
+  const query = document.getElementById('searchInput').value.trim();
+  loadHistory(true, query, learnerName);
+}
 
 function getDefaultTemplate() {
   return `{{分享标题}}

@@ -8,6 +8,8 @@ let historyContainer = null;
 let loadMoreBtn = null;
 let onItemClickCallback = null;
 let currentOffset = 0;
+let currentQuery = '';
+let currentLearner = '';
 
 export function initHistory(containerId, loadMoreBtnId, onItemClick) {
   historyContainer = document.getElementById(containerId);
@@ -19,7 +21,7 @@ export function initHistory(containerId, loadMoreBtnId, onItemClick) {
   }
 }
 
-export async function loadHistory(reset = false, query = '') {
+export async function loadHistory(reset = false, query, learner) {
   if (isLoading) return;
   isLoading = true;
 
@@ -30,6 +32,9 @@ export async function loadHistory(reset = false, query = '') {
     // if (historyContainer) historyContainer.innerHTML = ''; // 不要立即清空，保持加载状态或者显示加载骨架屏
     if (historyContainer) historyContainer.innerHTML = '<div style="text-align:center; color:#999; padding: 2rem;">正在加载数据...</div>';
   }
+  
+  if (typeof query === 'string') currentQuery = query;
+  if (typeof learner === 'string') currentLearner = learner;
 
   // 更新按钮状态
   if (loadMoreBtn) {
@@ -60,7 +65,10 @@ export async function loadHistory(reset = false, query = '') {
     const params = new URLSearchParams();
     params.set('limit', '10');
     if (nextCursor) params.set('cursor', nextCursor);
-    if (query) params.set('title', query);
+    const effectiveQuery = currentQuery || '';
+    const effectiveLearner = currentLearner || '';
+    if (effectiveQuery) params.set('title', effectiveQuery);
+    if (effectiveLearner) params.set('learner', effectiveLearner);
 
     // 3. 拼接最终请求地址
     const finalUrl = `${baseUrl}?${params.toString()}`;
