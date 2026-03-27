@@ -3,7 +3,7 @@
  * 测试基于字段映射的小红书卡片生成
  */
 
-import { generateAllCards, generateCardImage } from './image-generator.js';
+import { generateAllCards, generateCardImage } from '../public/scripts/image-generator.js';
 
 // 测试数据 - 模拟日语表达记录（符合新需求格式）
 const testExpressionData = {

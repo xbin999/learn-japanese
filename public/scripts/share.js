@@ -1,4 +1,3 @@
-
 import { initHistory, loadHistory } from './history-client.js';
 import { generateAllCards, downloadMultipleImages, downloadImage } from './image-generator.js';
 import { ensureLearnerName } from './nav.js';
@@ -6,11 +5,9 @@ import { ensureLearnerName } from './nav.js';
 let currentRecord = null;
 let template = '';
 
-// 初始化
 document.addEventListener('DOMContentLoaded', async () => {
-  // 加载模板
   try {
-    const res = await fetch('templates/xiaohongshu.txt');
+    const res = await fetch('../../templates/xiaohongshu.txt');
     if (res.ok) {
       template = await res.text();
     } else {
@@ -23,10 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   document.getElementById('templateEditor').value = template;
 
-  // 初始化历史记录
   initHistory('historyList', 'loadMoreHistoryBtn', onRecordSelect);
-  // loadHistory(true); // 默认不加载
-  // 绑定事件
   document.getElementById('searchBtn').addEventListener('click', () => {
     triggerSearch();
   });
@@ -90,29 +84,23 @@ function openImageInNewTab(blob) {
 function onRecordSelect(record, index) {
   currentRecord = record;
   
-  // 更新当前记录索引
   if (typeof index !== 'undefined') {
     currentRecordIndex = index;
   }
   
-  // 激活右侧面板
   const panel = document.getElementById('detailPanel');
   panel.style.opacity = '1';
   panel.style.pointerEvents = 'auto';
   
-  // 高亮选中项
   document.querySelectorAll('.history-card').forEach((el, i) => {
     el.classList.toggle('active', i === currentRecordIndex);
   });
   
-  // 生成文案
   generateText(record);
   
-  // 重置图片区域
   document.getElementById('imageResult').style.display = 'none';
   document.getElementById('imagePreview').innerHTML = '';
   
-  // 移动端自动滚动到详情面板
   if (window.innerWidth <= 768) {
     panel.scrollIntoView({ 
       behavior: 'smooth', 
@@ -124,10 +112,7 @@ function onRecordSelect(record, index) {
 function generateText(record) {
   let text = template;
   
-  // 格式化生词
   const vocab = record['生词'] || '';
-  
-  // 格式化错误记录
   const errors = record['错误记录'] || '';
 
   const replacements = {
@@ -164,7 +149,7 @@ function toggleTemplateEditor() {
 function copyText() {
   const textarea = document.getElementById('xhsContent');
   textarea.select();
-  document.execCommand('copy'); // 简单兼容
+  document.execCommand('copy');
   
   const btn = document.getElementById('copyTextBtn');
   const original = btn.textContent;
@@ -195,12 +180,6 @@ async function generateImages() {
   try {
     const style = document.querySelector('input[name="cardStyle"]:checked').value;
     
-    // 构造 image-generator 需要的数据格式
-    // 注意：image-generator 期望的数据结构可能需要特定的数组格式（如错误记录、生词）
-    // 而 Notion 返回的是文本。我们需要解析文本回数组吗？
-    // 查看 image-generator.js 的 drawKnowledgeCard/drawLinearCard 实现
-    // 它们似乎期望 错误记录/生词 是数组。
-    
     const processedRecord = {
       ...currentRecord,
       生词: parseVocab(currentRecord['生词']),
@@ -217,7 +196,6 @@ async function generateImages() {
       tips.style.display = 'block';
     }
     
-    // Convert Blob objects to URLs for display
     preview.innerHTML = '';
     imageUrls.forEach((blob, index) => {
       const url = URL.createObjectURL(blob);
@@ -228,7 +206,6 @@ async function generateImages() {
       img.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
       img.style.cursor = 'pointer';
       
-      // Add click to download single image
       img.onclick = () => {
         if (isMobile) {
           openImageInNewTab(blob);
@@ -244,7 +221,6 @@ async function generateImages() {
       preview.appendChild(wrapper);
     });
     
-    // Show Save All button
     saveAllBtn.style.display = 'inline-block';
     saveAllBtn.onclick = () => {
       if (isMobile) {
@@ -265,14 +241,9 @@ async function generateImages() {
   }
 }
 
-// 简单的文本解析器，将 Markdown 文本转回对象数组，供绘图使用
 function parseVocab(text) {
   if (!text) return [];
-  // 假设格式: **单词1** \n 词汇：xxx \n 读音：xxx ...
-  // 或者简单的行解析
-  // 这里做一个简单的正则提取，只要能提取出 词汇/读音/解释 即可
   
-  // 简单策略：按 **单词 分割
   const items = text.split(/\*\*单词\d+\*\*/).filter(t => t.trim());
   return items.map(item => {
     const getVal = (key) => {
@@ -304,14 +275,12 @@ function parseErrors(text) {
   });
 }
 
-// 移动端优化：触摸滑动切换记录
 let touchStartX = 0;
 let touchEndX = 0;
 let currentRecordIndex = 0;
 let records = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 移动端触摸手势支持
   if ('ontouchstart' in window) {
     const historyList = document.getElementById('historyList');
     
@@ -324,7 +293,6 @@ document.addEventListener('DOMContentLoaded', () => {
       handleSwipeGesture();
     });
     
-    // 防止双击缩放
     let lastTouchEnd = 0;
     document.addEventListener('touchend', (event) => {
       const now = Date.now();
@@ -334,7 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
       lastTouchEnd = now;
     }, false);
     
-    // 输入框获得焦点时自动调整视口
     const xhsContent = document.getElementById('xhsContent');
     const templateEditor = document.getElementById('templateEditor');
     
@@ -349,7 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // 自动调整文本框高度
   function adjustTextareaHeight(textarea) {
     if (!textarea) return;
     
@@ -361,27 +327,22 @@ document.addEventListener('DOMContentLoaded', () => {
     textarea.style.height = newHeight + 'px';
   }
   
-  // 为所有文本框添加自动调整功能
   const textareas = document.querySelectorAll('textarea');
   textareas.forEach(textarea => {
     textarea.addEventListener('input', () => adjustTextareaHeight(textarea));
-    // 页面加载时调整一次
     setTimeout(() => adjustTextareaHeight(textarea), 100);
   });
   
-  // 窗口大小改变时重新调整
   window.addEventListener('resize', () => {
     textareas.forEach(textarea => {
       setTimeout(() => adjustTextareaHeight(textarea), 100);
     });
   });
   
-  // 移动端快速返回顶部
   let lastScrollTop = 0;
   window.addEventListener('scroll', () => {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     
-    // 向上快速滑动超过100px时显示返回顶部按钮
     if (lastScrollTop - scrollTop > 100 && scrollTop > 200) {
       showBackToTopButton();
     }
@@ -389,7 +350,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   function showBackToTopButton() {
-    // 创建返回顶部按钮（如果不存在）
     let backToTopBtn = document.getElementById('backToTopBtn');
     if (!backToTopBtn) {
       backToTopBtn = document.createElement('button');
@@ -424,7 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     backToTopBtn.style.display = 'block';
     
-    // 3秒后自动隐藏
     setTimeout(() => {
       if (backToTopBtn) {
         backToTopBtn.style.display = 'none';
@@ -441,29 +400,24 @@ function handleSwipeGesture() {
   
   if (Math.abs(diff) > swipeThreshold) {
     if (diff > 0 && currentRecordIndex < records.length - 1) {
-      // 向左滑动 - 下一条记录
       currentRecordIndex++;
       selectRecordWithSwipe(records[currentRecordIndex], currentRecordIndex);
     } else if (diff < 0 && currentRecordIndex > 0) {
-      // 向右滑动 - 上一条记录
       currentRecordIndex--;
       selectRecordWithSwipe(records[currentRecordIndex], currentRecordIndex);
     }
   }
 }
 
-// 增强的记录选择函数（带滑动支持）
 function selectRecordWithSwipe(record, index) {
   currentRecord = record;
   currentRecordIndex = index;
   generateText(record);
   
-  // 高亮当前记录
   document.querySelectorAll('.history-card').forEach((card, i) => {
     card.classList.toggle('active', i === index);
   });
   
-  // 滚动到详情面板（移动端）
   if (window.innerWidth <= 768) {
     document.getElementById('detailPanel').scrollIntoView({ 
       behavior: 'smooth', 

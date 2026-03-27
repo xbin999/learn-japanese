@@ -256,6 +256,30 @@
       margin-top: 1rem;
     }
 
+    .model-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 0.8rem;
+      flex-wrap: wrap;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+    }
+
+    .model-row select {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.85);
+      color: var(--ink);
+      padding: 0.25rem 0.8rem;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .model-row select:focus {
+      box-shadow: 0 0 0 3px rgba(176,122,98,0.2);
+    }
+
     button {
       cursor: pointer;
       border: none;
@@ -636,9 +660,16 @@
             <small style="color: var(--ink); opacity: 0.7;">💡 提示：Ctrl+A 全选，或点击右上角清除按钮</small>
             <button id="clearBtn" class="secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">清除</button>
           </div>
-          <textarea id="input" placeholder='{"title":"","topic":"","intent":"","versions":{"v1":"","v2":"","v3":"","v4":""},"final":"","coreStructure":"","improvement":"","errors":[{"name":"","description":"","correctPattern":""}],"vocab":[{"word":"","reading":"","meaning":"","example":""}],"summary":"","shareTitle":""}'></textarea>
+          <textarea id="input" placeholder="标题：2026-03-26 感受表达｜第21天练习&#10;&#10;主题：感受表达&#10;&#10;——我想表达——&#10;今天是“每日一句日语练习”的第21天。据说21天可以养成一个习惯。"></textarea>
+          <div class="model-row">
+            <span>模型选择</span>
+            <select id="modelSelect">
+              <option value="zhipu">Zhipu glm-4-flash-250414</option>
+              <option value="gemini">Gemini 1.5 Flash</option>
+            </select>
+          </div>
           <div class="actions">
-            <button id="syncBtn" class="primary">同步到 Notion</button>
+            <button id="syncBtn" class="primary">生成并同步</button>
           </div>
         </div>
 
@@ -649,173 +680,7 @@
     </main>
   </div>
 
-  <script type="module" src="./nav.js"></script>
-  <script type="module">
-    import { WORKER_URL } from './config.js';
-    import { ensureLearnerName } from './nav.js';
-
-    const input = document.getElementById('input');
-    const syncResult = document.getElementById('syncResult');
-    const syncBtn = document.getElementById('syncBtn');
-    const clearBtn = document.getElementById('clearBtn');
-
-    // 清除按钮功能
-    clearBtn.addEventListener('click', () => {
-      input.value = '';
-      input.focus();
-      syncResult.textContent = '（同步结果会出现在这里）';
-    });
-
-
-
-    syncBtn.addEventListener('click', async () => {
-      const text = input.value;
-      if (!text.trim()) {
-        alert('请先粘贴 JSON');
-        return;
-      }
-      let rawJson;
-      try {
-        rawJson = JSON.parse(text);
-      } catch (err) {
-        alert('JSON 解析失败，请检查格式');
-        return;
-      }
-      const learnerName = ensureLearnerName();
-      if (!learnerName) return;
-
-      syncBtn.disabled = true;
-      syncBtn.textContent = '同步中...';
-      
-      try {
-        const res = await fetch(`${WORKER_URL}/sync`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...rawJson, 学习者: learnerName })
-        });
-
-        const result = await res.json();
-        
-        if (result.ok) {
-          syncResult.innerHTML = `<span style="color:green">✅ ${result.message}</span>`;
-          // 成功特效
-          createFireworks();
-        } else {
-          throw new Error(result.error);
-        }
-      } catch (err) {
-        syncResult.innerHTML = `<span style="color:red">❌ 同步失败: ${err.message}</span>`;
-      } finally {
-        syncBtn.disabled = false;
-        syncBtn.textContent = '同步到 Notion';
-      }
-    });
-    
-    // 简单的烟花特效
-    function createFireworks() {
-      const container = document.getElementById('fireworks');
-      const rect = syncResult.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-
-      for (let i = 0; i < 20; i++) {
-        const spark = document.createElement('div');
-        spark.className = 'spark';
-        spark.style.left = x + 'px';
-        spark.style.top = y + 'px';
-        spark.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-        
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 50 + Math.random() * 100;
-        
-        spark.style.setProperty('--x', Math.cos(angle) * dist + 'px');
-        spark.style.setProperty('--y', Math.sin(angle) * dist + 'px');
-        
-        container.appendChild(spark);
-        setTimeout(() => spark.remove(), 600);
-      }
-    }
-    
-    // 移动端优化：自动调整输入框高度
-    function adjustTextareaHeight() {
-      const lineHeight = parseInt(getComputedStyle(input).lineHeight);
-      const minHeight = 120;
-      const maxHeight = 300;
-      
-      input.style.height = 'auto';
-      const newHeight = Math.max(minHeight, Math.min(maxHeight, input.scrollHeight));
-      input.style.height = newHeight + 'px';
-    }
-    
-    // 移动端触摸优化
-    if ('ontouchstart' in window) {
-      // 为触摸设备添加快速滚动到顶部功能
-      let touchStartY = 0;
-      let touchEndY = 0;
-      
-      document.addEventListener('touchstart', (e) => {
-        touchStartY = e.changedTouches[0].screenY;
-      });
-      
-      document.addEventListener('touchend', (e) => {
-        touchEndY = e.changedTouches[0].screenY;
-        // 快速下滑手势：滚动到顶部
-        if (touchEndY - touchStartY > 100 && Math.abs(touchEndY - touchStartY) > 50) {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      });
-      
-      // 防止双击缩放
-      let lastTouchEnd = 0;
-      document.addEventListener('touchend', (event) => {
-        const now = Date.now();
-        if (now - lastTouchEnd <= 300) {
-          event.preventDefault();
-        }
-        lastTouchEnd = now;
-      }, false);
-      
-      // 输入框获得焦点时自动调整视口
-      input.addEventListener('focus', () => {
-        setTimeout(() => {
-          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
-      });
-    }
-    
-    // 输入框内容变化时自动调整高度
-    input.addEventListener('input', adjustTextareaHeight);
-    
-    // 窗口大小改变时重新调整
-    window.addEventListener('resize', () => {
-      setTimeout(adjustTextareaHeight, 100);
-    });
-    
-    // 页面加载完成后调整一次
-    window.addEventListener('load', adjustTextareaHeight);
-    
-    // 防止意外的页面刷新（移动端常见）
-    let isFormDirty = false;
-    input.addEventListener('input', () => {
-      isFormDirty = true;
-    });
-    
-    window.addEventListener('beforeunload', (e) => {
-      if (isFormDirty && input.value.trim()) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    });
-    
-    // 键盘快捷键优化（移动端隐藏）
-    if (window.innerWidth > 768) {
-      input.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.key === 'Enter') {
-          e.preventDefault();
-          parseBtn.click();
-        }
-      });
-    }
-  </script>
+  <script type="module" src="./scripts/nav.js"></script>
+  <script type="module" src="./scripts/index.js"></script>
 </body>
 </html>

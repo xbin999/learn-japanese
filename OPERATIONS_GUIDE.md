@@ -6,10 +6,17 @@
 
 ## 🎯 快速参考
 
+### 🧭 目录结构规范
+- 前端与后端分离
+- 前端入口与静态资源在 `public/`
+- 前端脚本在 `public/scripts/`
+- 后端入口与逻辑在 `server/`
+- 模板与测试独立目录：`templates/`、`tests/`
+
 ### 🚀 一键启动
 ```bash
-# 启动前端
-python3 -m http.server 8080
+# 启动前端（public 作为根目录）
+python3 -m http.server 8080 --directory public
 
 # 启动后端
 npx wrangler dev --port 8787 --local-protocol http
@@ -32,10 +39,24 @@ lsof -i :8080; lsof -i :8787
 ```
 
 ### 🌐 访问地址
-- **前端应用**: http://localhost:8080
+- **前端应用**: http://localhost:8080/index.html
 - **后端 API**: http://localhost:8787
 - **分享页面**: http://localhost:8080/share.html
 - **导出复盘**: http://localhost:8080/export.html
+
+### 🔐 环境变量快速用法
+```bash
+# 载入本地 .dev.vars 到当前终端
+set -a
+source .dev.vars
+set +a
+
+# 验证是否生效
+echo $NOTION_TOKEN
+echo $DATABASE_ID
+echo $ZHIPU_API_KEY
+echo $GEMINI_API_KEY
+```
 
 ### 🧊 Trae sandbox 与刷新说明
 - Trae sandbox 只是命令执行的包装器，不是热刷新服务
@@ -57,10 +78,10 @@ lsof -i :8080; lsof -i :8787
 #### 启动前端服务
 ```bash
 # 启动前端开发服务器 (端口 8080)
-cd /Users/yangbin/Documents/trae_projects/learn-japanese && python3 -m http.server 8080
+cd /Users/yangbin/Documents/trae_projects/learn-japanese && python3 -m http.server 8080 --directory public
 
 # 或者使用简写
-python3 -m http.server 8080
+python3 -m http.server 8080 --directory public
 ```
 
 #### 启动后端服务
@@ -199,6 +220,12 @@ cp .env.example .dev.vars
 # 编辑配置文件，填入你的 API 密钥等
 nano .dev.vars
 ```
+```
+NOTION_TOKEN=xxx
+DATABASE_ID=xxx
+ZHIPU_API_KEY=xxx
+GEMINI_API_KEY=xxx
+```
 
 #### 4. 验证环境
 ```bash
@@ -207,7 +234,7 @@ node tests/test_parse.js
 
 # 启动服务测试
 python3 -m http.server 8080
-# 在浏览器访问 http://localhost:8080
+# 在浏览器访问 http://localhost:8080/index.html
 ```
 
 ### 部署到生产环境
@@ -217,6 +244,8 @@ python3 -m http.server 8080
 # 在 Cloudflare Dashboard 设置环境变量
 wrangler secret put NOTION_TOKEN
 wrangler secret put DATABASE_ID
+wrangler secret put ZHIPU_API_KEY
+wrangler secret put GEMINI_API_KEY
 ```
 
 #### 2. 部署到 Cloudflare
@@ -274,7 +303,7 @@ git push origin main
 添加到 `~/.bashrc` 或 `~/.zshrc`：
 ```bash
 # 项目快捷命令
-alias lj-start='cd /Users/yangbin/Documents/trae_projects/learn-japanese && python3 -m http.server 8080 &'
+alias lj-start='cd /Users/yangbin/Documents/trae_projects/learn-japanese && python3 -m http.server 8080 --directory public &'
 alias lj-worker='cd /Users/yangbin/Documents/trae_projects/learn-japanese && npx wrangler dev --port 8787 --local-protocol http'
 alias lj-stop='lsof -ti:8080 | xargs kill -9; lsof -ti:8787 | xargs kill -9'
 alias lj-status='lsof -i :8080; lsof -i :8787'
@@ -292,7 +321,7 @@ alias gl='git log --oneline -10'
 ## 🎨 小贴士
 
 1. **服务启动后**
-   - 前端访问：http://localhost:8080
+   - 前端访问：http://localhost:8080/index.html
    - 后端 API：http://localhost:8787
 
 2. **开发建议**

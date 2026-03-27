@@ -1,5 +1,5 @@
 
-import { parseText } from '../parse.js';
+import { parseText } from '../server/parse.js';
 
 const raw = JSON.stringify({
   title: '',

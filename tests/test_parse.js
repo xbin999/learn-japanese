@@ -1,4 +1,4 @@
-import { parseText } from '../parse.js';
+import { parseText } from '../server/parse.js';
 
 const goldInput = JSON.stringify({
   title: '娘と朝ジョギングした日',

@@ -2,7 +2,7 @@
  * Cloudflare Worker：接收前端解析结果 → 写入 Notion 数据库
  * 路由：POST /sync
  */
-import { parseText } from '../parse.js';
+import { parseText } from './parse.js';
 
 export default {
   async fetch(request, env) {
@@ -109,6 +109,33 @@ export default {
         return Response.json({ ok: true, message: '已同步到 Notion！' }, { headers: corsHeaders });
       } catch (err) {
         console.error(err);
+        return Response.json({ ok: false, error: err.message }, { status: 500, headers: corsHeaders });
+      }
+    }
+
+    if (url.pathname === '/ai/convert') {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405, headers: corsHeaders });
+      }
+      try {
+        const body = await request.json();
+        const text = (body && body.text ? String(body.text) : '').trim();
+        if (!text) {
+          return Response.json({ ok: false, error: '请输入结构化文本' }, { status: 400, headers: corsHeaders });
+        }
+        const model = (body && body.model ? String(body.model) : '').toLowerCase();
+        const resolvedModel = model || (env.ZHIPU_API_KEY ? 'zhipu' : 'gemini');
+        const prompt = buildInstruction(text);
+        const data =
+          resolvedModel === 'gemini'
+            ? await requestGemini({ apiKey: env.GEMINI_API_KEY, prompt })
+            : await requestZhipu({ apiKey: env.ZHIPU_API_KEY, prompt });
+        const intentFallback = extractLabeledSection(text, '我想表达');
+        if (intentFallback && !normalizeTextValue(data.intent)) {
+          data.intent = intentFallback;
+        }
+        return Response.json({ ok: true, data, model: resolvedModel }, { headers: corsHeaders });
+      } catch (err) {
         return Response.json({ ok: false, error: err.message }, { status: 500, headers: corsHeaders });
       }
     }
@@ -339,4 +366,133 @@ function vocabToMarkdown(list) {
 例句：${v['例句'] || ''}  
 `
   ).join('\n');
+}
+
+function buildInstruction(rawText) {
+  return `请把下面“结构化文本”转换成 JSON，要求：
+1) 必须是合法 JSON，且只输出 JSON
+2) 字段结构与下面 schema 完全一致
+3) 标题： -> title，主题： -> topic
+4) ——我想表达—— -> intent
+5) ——进化过程—— -> versions.v1-v4
+6) ——最终定稿—— -> final
+7) ——本次核心结构—— -> coreStructure
+8) ——表达升级点—— -> improvement
+9) ——错误记录—— -> errors
+10) ——生词—— -> vocab
+11) ——学习总结—— -> summary
+12) ——分享标题—— -> shareTitle
+
+schema:
+{
+  "title": "",
+  "topic": "",
+  "intent": "",
+  "versions": { "v1": "", "v2": "", "v3": "", "v4": "" },
+  "final": "",
+  "coreStructure": "",
+  "improvement": "",
+  "errors": [{ "name": "", "description": "", "correctPattern": "" }],
+  "vocab": [{ "word": "", "reading": "", "meaning": "", "example": "" }],
+  "summary": "",
+  "shareTitle": ""
+}
+
+结构化文本：
+${rawText}`;
+}
+
+function normalizeTextValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(item => String(item)).join('\n').trim();
+  }
+  if (value === null || value === undefined) return '';
+  return String(value).trim();
+}
+
+function extractLabeledSection(text, label) {
+  const raw = String(text || '');
+  const startRegex = new RegExp(`——\\s*${label}\\s*——`);
+  const startMatch = raw.match(startRegex);
+  if (!startMatch) return '';
+  const startIndex = startMatch.index + startMatch[0].length;
+  const rest = raw.slice(startIndex);
+  const endMatch = rest.match(/\n\s*——.+?——/);
+  const endIndex = endMatch ? startIndex + endMatch.index : raw.length;
+  const content = raw.slice(startIndex, endIndex).trim();
+  return content;
+}
+
+function cleanJsonText(text) {
+  return String(text || '')
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```\s*$/i, '')
+    .trim();
+}
+
+function parseJsonStrict(text) {
+  const cleaned = cleanJsonText(text);
+  return JSON.parse(cleaned);
+}
+
+async function requestGemini({ apiKey, prompt }) {
+  if (!apiKey) {
+    throw new Error('Missing GEMINI_API_KEY');
+  }
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const body = {
+    contents: [
+      { role: 'user', parts: [{ text: prompt }] }
+    ],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      temperature: 0.2
+    }
+  };
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Gemini API ${res.status}: ${text}`);
+  }
+  const data = await res.json();
+  const outputText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!outputText) {
+    throw new Error('Gemini response empty');
+  }
+  return parseJsonStrict(outputText);
+}
+
+async function requestZhipu({ apiKey, prompt }) {
+  if (!apiKey) {
+    throw new Error('Missing ZHIPU_API_KEY');
+  }
+  const endpoint = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+  const body = {
+    model: 'glm-4-flash-250414',
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.2
+  };
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Zhipu API ${res.status}: ${text}`);
+  }
+  const data = await res.json();
+  const outputText = data?.choices?.[0]?.message?.content;
+  if (!outputText) {
+    throw new Error('Zhipu response empty');
+  }
+  return parseJsonStrict(outputText);
 }

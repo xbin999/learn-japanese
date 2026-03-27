@@ -30,7 +30,7 @@ const STYLES = {
     width: 1080,
     height: 1440,
     colors: {
-      bg: '#F6F6F6', // 辅助背景
+      bg: '#F6F6F6',
       cardBg: '#FFFFFF',
       textMain: '#222222',
       textBody: '#444444',
@@ -52,7 +52,7 @@ export function calculateDayNumber() {
   const today = new Date();
   const diffTime = Math.abs(today - startDate);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-  return diffDays || 1; // Default to 1 if calculation fails or same day
+  return diffDays || 1;
 }
 
 /**
@@ -69,28 +69,26 @@ export function generateCardHTML(expressionData, cardIndex, styleName = 'linear'
   
   const { 分享标题, 进化过程, 最终定稿, 本次核心结构, 表达升级点, 学习总结, 错误记录, 生词, 我想表达 } = expressionData;
   
-  // 解析进化过程版本
   const versions = parseEvolutionProcess(进化过程);
   
   let contentHTML = '';
   switch (cardIndex) {
-    case 1: // 封面卡片
+    case 1:
       contentHTML = generateCoverCard(分享标题 || '日语表达学习记录', styleName);
       break;
-    case 2: // 表达起点卡片
+    case 2:
       contentHTML = generateStartingCard(versions.v1, versions.v2, styleName, 我想表达);
       break;
-    case 3: // 表达升级卡片
+    case 3:
       contentHTML = generateUpgradeCard(versions.v3, 最终定稿 || '', styleName);
       break;
-    case 4: // 表达结构卡片
+    case 4:
       contentHTML = generateStructureCard(本次核心结构 || '', 表达升级点 || '', 学习总结, 错误记录, 生词, styleName);
       break;
     default:
       contentHTML = '';
   }
 
-  // 包装在统一容器中
   return `
     <div class="container ${styleName}-style">
       ${contentHTML}
@@ -143,7 +141,6 @@ function generateCoverCard(shareTitle, styleName) {
       </div>
     `;
   } else {
-    // Knowledge Style
     return `
       <div class="knowledge-card">
         <div class="knowledge-header">
@@ -162,7 +159,6 @@ function generateCoverCard(shareTitle, styleName) {
  * 生成表达起点卡片HTML
  */
 function generateStartingCard(v1, v2, styleName, cnMeaning) {
-  // 如果没有传入 cnMeaning，尝试从 v1 提取（兼容旧逻辑）
   if (!cnMeaning) {
     cnMeaning = extractChineseMeaning(v1);
   }
@@ -195,7 +191,6 @@ function generateStartingCard(v1, v2, styleName, cnMeaning) {
       </div>
     `;
   } else {
-    // Knowledge Style
     return `
       <div class="knowledge-card">
         <div class="knowledge-section">
@@ -251,7 +246,6 @@ function generateUpgradeCard(v3, final, styleName) {
       </div>
     `;
   } else {
-    // Knowledge Style
     return `
       <div class="knowledge-card">
         <div class="knowledge-section">
@@ -315,7 +309,6 @@ function generateStructureCard(coreStructure, upgradePoints, learningSummary, er
       </div>
     `;
   } else {
-    // Knowledge Style
     return `
       <div class="knowledge-card">
         ${content}
@@ -375,7 +368,6 @@ function escapeHtml(text) {
 function generateCSS(styleName) {
   const style = STYLES[styleName];
   
-  // 基础重置
   let css = `
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -393,7 +385,6 @@ function generateCSS(styleName) {
       position: relative;
       overflow: hidden;
     }
-    /* 文本换行规则 */
     .jp-text, .jp-text-large, .final-text {
       font-family: ${style.fonts.jp};
       word-break: break-all;
@@ -401,12 +392,11 @@ function generateCSS(styleName) {
     }
   `;
   
-  // Linear 风格样式
   if (styleName === 'linear') {
     css += `
       .linear-style {
         background-color: ${style.colors.bg};
-        padding: 140px 120px; /* 上下140px, 左右120px */
+        padding: 140px 120px;
         display: flex;
         flex-direction: column;
         color: ${style.colors.textMain};
@@ -419,7 +409,6 @@ function generateCSS(styleName) {
         position: relative;
       }
       
-      /* 左侧装饰线 - 通过伪元素实现 */
       .linear-style::before {
         content: '';
         position: absolute;
@@ -431,7 +420,6 @@ function generateCSS(styleName) {
         border-radius: 3px;
       }
       
-      /* 标题样式 */
       .linear-title {
         font-size: 64px;
         font-weight: 700;
@@ -446,7 +434,6 @@ function generateCSS(styleName) {
         margin-bottom: 20px;
       }
       
-      /* 标签样式 */
       .linear-tag, .linear-badge {
         display: inline-block;
         background-color: ${style.colors.labelBg};
@@ -464,7 +451,6 @@ function generateCSS(styleName) {
         margin-bottom: 16px;
       }
       
-      /* 内容区块 */
       .linear-section {
         margin-bottom: 48px;
       }
@@ -518,7 +504,6 @@ function generateCSS(styleName) {
         border-left: 2px solid ${style.colors.border};
       }
       
-      /* 结构列表 */
       .structure-item {
         display: flex;
         align-items: flex-start;
@@ -574,7 +559,6 @@ function generateCSS(styleName) {
       }
     `;
   } 
-  // Knowledge 风格样式
   else {
     css += `
       .knowledge-style {
@@ -669,7 +653,7 @@ function generateCSS(styleName) {
       }
       
       .knowledge-final-box {
-        background-color: #FFF9F5; /* 淡淡的橙色背景 */
+        background-color: #FFF9F5;
         border: 2px solid ${style.colors.accent}20;
       }
       
@@ -702,7 +686,6 @@ function generateCSS(styleName) {
         line-height: 1.8;
       }
       
-      /* 结构列表 */
       .structure-item {
         display: flex;
         align-items: flex-start;
@@ -856,11 +839,9 @@ async function htmlToImage(html, width, height) {
       }, 4000);
     });
   } else {
-    // Mock for Node.js
     return new Promise(resolve => resolve(new Blob([''], { type: 'image/png' })));
   }
 }
-
 
 /**
  * 生成单张卡片图片

@@ -1,4 +1,3 @@
-
 import { WORKER_URL } from './config.js';
 
 let nextCursor = null;
@@ -28,40 +27,29 @@ export async function loadHistory(reset = false, query, learner) {
   if (reset) {
     nextCursor = null;
     hasMore = false;
-    currentOffset = 0; // 重置偏移量
-    // if (historyContainer) historyContainer.innerHTML = ''; // 不要立即清空，保持加载状态或者显示加载骨架屏
+    currentOffset = 0;
     if (historyContainer) historyContainer.innerHTML = '<div style="text-align:center; color:#999; padding: 2rem;">正在加载数据...</div>';
   }
   
   if (typeof query === 'string') currentQuery = query;
   if (typeof learner === 'string') currentLearner = learner;
 
-  // 更新按钮状态
   if (loadMoreBtn) {
     loadMoreBtn.textContent = '加载中...';
     loadMoreBtn.disabled = true;
   }
 
   try {
-    // -----------------------------------------------------------
-    // 终极修复：完全避开 new URL() 构造绝对路径的复杂性
-    // 直接使用相对路径 + URLSearchParams 字符串拼接
-    // -----------------------------------------------------------
-    
     let baseUrl = '';
     
-    // 1. 确定基础路径
     if (WORKER_URL && typeof WORKER_URL === 'string' && WORKER_URL.trim() !== '') {
-      // 本地开发环境：使用显式配置的 URL
       baseUrl = WORKER_URL.trim();
       if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
       baseUrl += '/history';
     } else {
-      // 生产环境：使用相对路径，让浏览器自动处理
       baseUrl = '/history';
     }
 
-    // 2. 构建查询参数
     const params = new URLSearchParams();
     params.set('limit', '10');
     if (nextCursor) params.set('cursor', nextCursor);
@@ -70,7 +58,6 @@ export async function loadHistory(reset = false, query, learner) {
     if (effectiveQuery) params.set('title', effectiveQuery);
     if (effectiveLearner) params.set('learner', effectiveLearner);
 
-    // 3. 拼接最终请求地址
     const finalUrl = `${baseUrl}?${params.toString()}`;
     
     console.log('Fetching history from:', finalUrl);
@@ -80,11 +67,11 @@ export async function loadHistory(reset = false, query, learner) {
     
     const data = await res.json();
     
-    if (reset && historyContainer) historyContainer.innerHTML = ''; // 获取成功后清空
+    if (reset && historyContainer) historyContainer.innerHTML = '';
 
     if (data.results && data.results.length > 0) {
       renderHistoryItems(data.results);
-      currentOffset += data.results.length; // 更新偏移量
+      currentOffset += data.results.length;
     } else if (reset) {
       historyContainer.innerHTML = '<div style="text-align:center; color:#999;">暂无记录</div>';
     }
@@ -140,13 +127,11 @@ function renderHistoryItems(items) {
       <p class="history-preview">${(item['我想表达'] || '').slice(0, 50)}...</p>
     `;
     
-    // 点击卡片
     card.addEventListener('click', () => {
       if (onItemClickCallback) {
         onItemClickCallback(item, currentOffset + index);
       } else {
         fillInput(item);
-        // 滚动到顶部
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
@@ -160,18 +145,11 @@ function renderHistoryItems(items) {
 function fillInput(item) {
   const input = document.getElementById('input');
   if (!input) return;
-
-  // 构造结构化文本
-  // 注意：这里我们尽量还原格式，但可能无法完全一致，取决于用户原始输入习惯
-  // 我们使用标准格式
   
-  // 处理错误记录和生词的格式转换 (Markdown -> 解析器格式)
   let errorText = item['错误记录'] || '';
-  // 将 **错误N** 转换为 [错误N] 以适配 parse.js
   errorText = errorText.replace(/\*\*错误(\d+)\*\*/g, '[错误$1]');
   
   let vocabText = item['生词'] || '';
-  // 将 **单词N** 转换为 [单词N] 以适配 parse.js
   vocabText = vocabText.replace(/\*\*单词(\d+)\*\*/g, '[单词$1]');
   
   const text = `标题：${item['标题']}
@@ -203,11 +181,8 @@ ${vocabText}
 
   input.value = text;
   
-  // 触发一次解析预览
-  // 假设 parseBtn 存在且有点击事件
   const parseBtn = document.getElementById('parseBtn');
   if (parseBtn) {
-    // 稍微延迟一下，让用户看到填入的效果
     setTimeout(() => parseBtn.click(), 500);
   }
 }
