@@ -11,7 +11,7 @@
 - 前端入口与静态资源在 `public/`
 - 前端脚本在 `public/scripts/`
 - 后端入口与逻辑在 `server/`
-- 模板与测试独立目录：`templates/`、`tests/`
+- 模板与测试独立目录：`public/templates/`、`tests/`
 
 ### 🚀 一键启动
 ```bash
@@ -246,9 +246,22 @@ wrangler secret put NOTION_TOKEN
 wrangler secret put DATABASE_ID
 wrangler secret put ZHIPU_API_KEY
 wrangler secret put GEMINI_API_KEY
+wrangler secret put AI_API_KEY
+```
+```bash
+# 在 Cloudflare Dashboard 设置普通环境变量
+wrangler secret put FRONTEND_URL
 ```
 
-#### 2. 部署到 Cloudflare
+#### 2. 前端部署（public 作为站点根目录）
+- Cloudflare Pages：
+  - Build Output Directory = public
+  - 访问入口：https://你的域名/index.html
+- 其他静态托管：
+  - 将 public 目录作为站点根目录
+  - 访问入口：/index.html /share.html /export.html
+
+#### 3. 部署到 Cloudflare
 ```bash
 # 部署 Worker
 npx wrangler deploy

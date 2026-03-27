@@ -7,7 +7,7 @@ let template = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    const res = await fetch('../../templates/xiaohongshu.txt');
+    const res = await fetch('../templates/xiaohongshu.txt');
     if (res.ok) {
       template = await res.text();
     } else {

@@ -50,9 +50,10 @@ export default {
     }
 
     const url = new URL(request.url);
+    const pathname = normalizePath(url.pathname);
     
     // AI图片生成代理接口
-    if (url.pathname === '/generate-image') {
+    if (pathname === '/generate-image') {
       if (request.method !== 'POST') {
         return new Response('Method not allowed', { status: 405, headers: corsHeaders });
       }
@@ -97,7 +98,7 @@ export default {
     }
     
     // Notion同步接口
-    if (url.pathname === '/sync') {
+    if (pathname === '/sync') {
       if (request.method !== 'POST') {
         return new Response('Method not allowed', { status: 405, headers: corsHeaders });
       }
@@ -113,7 +114,7 @@ export default {
       }
     }
 
-    if (url.pathname === '/ai/convert') {
+    if (pathname === '/ai/convert') {
       if (request.method !== 'POST') {
         return new Response('Method not allowed', { status: 405, headers: corsHeaders });
       }
@@ -141,7 +142,7 @@ export default {
     }
 
     // Notion 历史记录查询接口
-    if (url.pathname === '/history') {
+    if (pathname === '/history') {
       if (request.method !== 'GET') {
         return new Response('Method not allowed', { status: 405, headers: corsHeaders });
       }
@@ -163,6 +164,12 @@ export default {
     return new Response('Not found', { status: 404, headers: corsHeaders });
   }
 };
+
+function normalizePath(path) {
+  if (path === '/api') return '/';
+  if (path.startsWith('/api/')) return path.slice(4);
+  return path;
+}
 
 async function getNotionHistory(env, limit, cursor, title, startDate, endDate, learner) {
   const { NOTION_TOKEN, DATABASE_ID } = env;

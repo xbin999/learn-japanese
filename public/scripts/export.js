@@ -61,7 +61,7 @@ function formatDate(date) {
 
 async function loadTemplate() {
   try {
-    const res = await fetch('../../templates/review.md');
+    const res = await fetch('../templates/review.md');
     if (res.ok) {
       return await res.text();
     }

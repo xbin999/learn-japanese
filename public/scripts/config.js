@@ -25,6 +25,9 @@ if (isLocalhost) {
   writeStoredWorkerUrl(workerParam);
 } else {
   workerUrl = readStoredWorkerUrl();
+  if (!workerUrl) {
+    workerUrl = `${window.location.origin}/api`;
+  }
 }
 
 export const WORKER_URL = workerUrl;
