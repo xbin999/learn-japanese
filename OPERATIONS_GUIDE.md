@@ -239,29 +239,12 @@ python3 -m http.server 8080
 
 ### 部署到生产环境
 
-#### 1. 配置生产环境变量
-```bash
-# 在 Cloudflare Dashboard 设置环境变量
-wrangler secret put NOTION_TOKEN
-wrangler secret put DATABASE_ID
-wrangler secret put ZHIPU_API_KEY
-wrangler secret put GEMINI_API_KEY
-wrangler secret put AI_API_KEY
-```
-```bash
-# 在 Cloudflare Dashboard 设置普通环境变量
-wrangler secret put FRONTEND_URL
-```
+#### 1. 前端部署（Cloudflare Pages）
+- 绑定 GitHub 仓库
+- Build Output Directory = public
+- 访问入口：https://你的域名/index.html
 
-#### 2. 前端部署（public 作为站点根目录）
-- Cloudflare Pages：
-  - Build Output Directory = public
-  - 访问入口：https://你的域名/index.html
-- 其他静态托管：
-  - 将 public 目录作为站点根目录
-  - 访问入口：/index.html /share.html /export.html
-
-#### 3. 部署到 Cloudflare
+#### 2. 后端部署（Cloudflare Worker）
 ```bash
 # 部署 Worker
 npx wrangler deploy
@@ -269,6 +252,26 @@ npx wrangler deploy
 # 查看部署状态
 npx wrangler tail
 ```
+
+#### 3. Worker 路由绑定（必须）
+- 路由：`你的域名/api/*` → 绑定到此 Worker
+- 示例：`jp.mathmind.homes/api/*`
+
+#### 4. Worker 环境变量配置（必须）
+```bash
+# Secrets
+wrangler secret put NOTION_TOKEN
+wrangler secret put DATABASE_ID
+wrangler secret put ZHIPU_API_KEY
+wrangler secret put GEMINI_API_KEY
+
+# 普通变量
+wrangler secret put FRONTEND_URL
+```
+
+#### 5. 部署后验证
+- 访问：`https://你的域名/share` / `https://你的域名/export`
+- 点击查询/搜索确认不再出现 `Unexpected token '<'`
 
 ---
 

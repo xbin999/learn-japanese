@@ -52,51 +52,6 @@ export default {
     const url = new URL(request.url);
     const pathname = normalizePath(url.pathname);
     
-    // AI图片生成代理接口
-    if (pathname === '/generate-image') {
-      if (request.method !== 'POST') {
-        return new Response('Method not allowed', { status: 405, headers: corsHeaders });
-      }
-      try {
-        const body = await request.json();
-        const { prompt, aspect_ratio = '3:4' } = body;
-        
-        if (!prompt) {
-          return Response.json({ ok: false, error: '缺少prompt参数' }, { status: 400, headers: corsHeaders });
-        }
-        
-        // 调用AI图片生成API
-        const imageResponse = await fetch('https://free-image-generation-api.xbin999.workers.dev', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${env.AI_API_KEY || 'mycru7-sopsyx-Fixnij'}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ prompt, aspect_ratio })
-        });
-
-        if (!imageResponse.ok) {
-          const errorText = await imageResponse.text();
-          throw new Error(`AI API错误: ${imageResponse.status} ${errorText}`);
-        }
-
-        // 获取图片blob
-        const imageBlob = await imageResponse.blob();
-        
-        // 返回图片数据给前端
-        return new Response(imageBlob, {
-          headers: {
-            ...corsHeaders,
-            'Content-Type': imageBlob.type || 'image/jpeg'
-          }
-        });
-        
-      } catch (err) {
-        console.error('AI图片生成错误:', err);
-        return Response.json({ ok: false, error: err.message }, { status: 500, headers: corsHeaders });
-      }
-    }
-    
     // Notion同步接口
     if (pathname === '/sync') {
       if (request.method !== 'POST') {
