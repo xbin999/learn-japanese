@@ -1,4 +1,4 @@
-name = "japanese-sync-worker"
+name = "learn-japanese-worker"
 main = "server/index.js"
 compatibility_date = "2026-03-02"
 
