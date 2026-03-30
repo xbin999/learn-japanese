@@ -24,12 +24,16 @@ export function parseText(raw) {
   };
 
   const versions = parsed.versions && typeof parsed.versions === 'object' ? parsed.versions : {};
-  const versionOrder = ['v1', 'v2', 'v3', 'v4'];
-  const versionText = versionOrder
-    .map((key, index) => {
+  const versionKeys = Object.keys(versions)
+    .filter(key => /^v\d+$/i.test(key))
+    .map(key => ({ key, num: Number(key.slice(1)) }))
+    .filter(item => Number.isFinite(item.num))
+    .sort((a, b) => a.num - b.num);
+  const versionText = versionKeys
+    .map(({ key, num }) => {
       const value = toText(versions[key]);
       if (!value) return '';
-      return `V${index + 1}：\n${value}`;
+      return `V${num}：\n${value}`;
     })
     .filter(Boolean)
     .join('\n\n');

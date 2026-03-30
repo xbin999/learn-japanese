@@ -336,7 +336,7 @@ function buildInstruction(rawText) {
 2) 字段结构与下面 schema 完全一致
 3) 标题： -> title，主题： -> topic
 4) ——我想表达—— -> intent
-5) ——进化过程—— -> versions.v1-v4
+5) ——进化过程—— -> versions.v1...vN（只输出文本中出现的版本，不补空、不重复）
 6) ——最终定稿—— -> final
 7) ——本次核心结构—— -> coreStructure
 8) ——表达升级点—— -> improvement
@@ -350,7 +350,7 @@ schema:
   "title": "",
   "topic": "",
   "intent": "",
-  "versions": { "v1": "", "v2": "", "v3": "", "v4": "" },
+  "versions": { "v1": "", "v2": "" },
   "final": "",
   "coreStructure": "",
   "improvement": "",

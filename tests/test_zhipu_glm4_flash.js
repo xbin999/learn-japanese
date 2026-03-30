@@ -19,7 +19,7 @@ const buildInstruction = (rawText) => `请把下面“结构化文本”转换�
 2) 字段结构与下面 schema 完全一致
 3) 标题： -> title，主题： -> topic
 4) ——我想表达—— -> intent
-5) ——进化过程—— -> versions.v1-v4
+5) ——进化过程—— -> versions.v1...vN（只输出文本中出现的版本，不补空、不重复）
 6) ——最终定稿—— -> final
 7) ——本次核心结构—— -> coreStructure
 8) ——表达升级点—— -> improvement
@@ -33,7 +33,7 @@ schema:
   "title": "",
   "topic": "",
   "intent": "",
-  "versions": { "v1": "", "v2": "", "v3": "", "v4": "" },
+  "versions": { "v1": "", "v2": "" },
   "final": "",
   "coreStructure": "",
   "improvement": "",
@@ -100,7 +100,39 @@ const assertNonEmpty = (value, label) => {
   ensure(String(value).trim().length > 0, `${label} should be non-empty`);
 };
 
-const validateOutput = (outputJson) => {
+const extractVersionNumbers = (text) => {
+  const matches = String(text || '').matchAll(/V(\d+)\s*[：:]/gi);
+  const numbers = [];
+  for (const match of matches) {
+    const value = Number(match[1]);
+    if (Number.isFinite(value)) numbers.push(value);
+  }
+  return Array.from(new Set(numbers)).sort((a, b) => a - b);
+};
+
+const expectedVersionKeys = (text) => extractVersionNumbers(text).map(num => `v${num}`);
+
+const validateVersions = (outputJson, sourceText) => {
+  const expected = expectedVersionKeys(sourceText);
+  const versionKeys = Object.keys(outputJson.versions || {})
+    .filter((key) => /^v\d+$/i.test(key))
+    .map((key) => key.toLowerCase());
+  const expectedSet = new Set(expected.map(key => key.toLowerCase()));
+  const outputSet = new Set(versionKeys);
+
+  expected.forEach((key) => {
+    const value = outputJson.versions[key] ?? outputJson.versions[key.toLowerCase()];
+    ensure(value !== undefined, `Missing versions.${key}`);
+    assertString(value, `versions.${key}`);
+    assertNonEmpty(value, `versions.${key}`);
+  });
+
+  outputSet.forEach((key) => {
+    ensure(expectedSet.has(key), `Unexpected versions.${key}`);
+  });
+};
+
+const validateOutput = (outputJson, sourceText) => {
   const requiredKeys = [
     'title',
     'topic',
@@ -137,12 +169,7 @@ const validateOutput = (outputJson) => {
   assertNonEmpty(outputJson.improvement, 'improvement');
   assertNonEmpty(outputJson.summary, 'summary');
   assertNonEmpty(outputJson.shareTitle, 'shareTitle');
-
-  ['v1', 'v2', 'v3', 'v4'].forEach((key) => {
-    ensure(key in outputJson.versions, `Missing versions.${key}`);
-    assertString(outputJson.versions[key], `versions.${key}`);
-    assertNonEmpty(outputJson.versions[key], `versions.${key}`);
-  });
+  validateVersions(outputJson, sourceText);
 
   ensure(outputJson.errors.length > 0, 'errors should not be empty');
   ensure(outputJson.vocab.length > 0, 'vocab should not be empty');
@@ -173,7 +200,7 @@ const main = async () => {
     const prompt = buildInstruction(testCase.text);
     const outputText = await requestZhipu(prompt);
     const outputJson = parseOutput(outputText);
-    validateOutput(outputJson);
+    validateOutput(outputJson, testCase.text);
     console.log(`✅ ${testCase.name} JSON 输出验证通过`);
   }
 };

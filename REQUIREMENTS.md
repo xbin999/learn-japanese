@@ -52,7 +52,7 @@
   "title": "",
   "topic": "",
   "intent": "",
-  "versions": { "v1": "", "v2": "", "v3": "", "v4": "" },
+  "versions": { "v1": "", "v2": "" }
   "final": "",
   "coreStructure": "",
   "improvement": "",
@@ -62,6 +62,7 @@
   "shareTitle": ""
 }
 ```
+* **版本动态**：`versions` 中只输出结构化文本中实际出现的版本（v1...vN），不补空、不重复
 
 ### 页面 2：查询与分享 (share.html)
 
