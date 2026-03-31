@@ -37,7 +37,7 @@ const buildInstruction = (rawText) => `请把下面“结构化文本”转换�
 7) ——本次核心结构—— -> coreStructure
 8) ——表达升级点—— -> improvement
 9) ——错误记录—— -> errors
-10) ——生词—— -> vocab
+10) ——生词—— -> vocab（如为空或明确无新增生词则输出空数组）
 11) ——学习总结—— -> summary
 12) ——分享标题—— -> shareTitle
 
@@ -105,6 +105,39 @@ const validateVersions = (outputJson, sourceText) => {
   });
 };
 
+const extractSection = (text, label) => {
+  const raw = String(text || '');
+  const startRegex = new RegExp(`——\\s*${label}\\s*——`);
+  const startMatch = raw.match(startRegex);
+  if (!startMatch) return '';
+  const startIndex = startMatch.index + startMatch[0].length;
+  const rest = raw.slice(startIndex);
+  const endMatch = rest.match(/\n\s*——.+?——/);
+  const endIndex = endMatch ? startIndex + endMatch.index : raw.length;
+  return raw.slice(startIndex, endIndex).trim();
+};
+
+const sourceHasNoVocab = (text) => {
+  const content = extractSection(text, '生词');
+  const normalized = String(content || '').replace(/\s+/g, '').trim();
+  if (!normalized) return true;
+  const signals = [
+    '本句没有新增生词',
+    '没有新增生词',
+    '无新增生词',
+    '无生词',
+    '无新增词汇'
+  ];
+  return signals.some(signal => normalized.includes(signal));
+};
+
+const normalizeVocab = (outputJson, sourceText) => {
+  if (sourceHasNoVocab(sourceText)) {
+    outputJson.vocab = [];
+  }
+  return outputJson;
+};
+
 const listModels = async () => {
   const response = await fetch(`${baseUrl}/models?key=${apiKey}`);
   if (!response.ok) {
@@ -160,7 +193,7 @@ const main = async () => {
     const outputText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     ensure(outputText, 'Missing output text');
 
-    const outputJson = parseOutput(outputText);
+    const outputJson = normalizeVocab(parseOutput(outputText), testCase.text);
     const requiredKeys = [
       'title',
       'topic',
@@ -180,6 +213,11 @@ const main = async () => {
     ensure(Array.isArray(outputJson.errors), 'errors should be array');
     ensure(Array.isArray(outputJson.vocab), 'vocab should be array');
     validateVersions(outputJson, testCase.text);
+    if (sourceHasNoVocab(testCase.text)) {
+      ensure(outputJson.vocab.length === 0, 'vocab should be empty');
+    } else {
+      ensure(outputJson.vocab.length > 0, 'vocab should not be empty');
+    }
 
     console.log(`✅ ${testCase.name} Gemini JSON 输出验证通过`);
   }

@@ -90,6 +90,10 @@ export default {
         if (intentFallback && !normalizeTextValue(data.intent)) {
           data.intent = intentFallback;
         }
+        const vocabSection = extractLabeledSection(text, '生词');
+        if (isNoVocabContent(vocabSection)) {
+          data.vocab = [];
+        }
         return Response.json({ ok: true, data, model: resolvedModel }, { headers: corsHeaders });
       } catch (err) {
         return Response.json({ ok: false, error: err.message }, { status: 500, headers: corsHeaders });
@@ -341,7 +345,7 @@ function buildInstruction(rawText) {
 7) ——本次核心结构—— -> coreStructure
 8) ——表达升级点—— -> improvement
 9) ——错误记录—— -> errors
-10) ——生词—— -> vocab
+10) ——生词—— -> vocab（如为空或明确无新增生词则输出空数组）
 11) ——学习总结—— -> summary
 12) ——分享标题—— -> shareTitle
 
@@ -383,6 +387,19 @@ function extractLabeledSection(text, label) {
   const endIndex = endMatch ? startIndex + endMatch.index : raw.length;
   const content = raw.slice(startIndex, endIndex).trim();
   return content;
+}
+
+function isNoVocabContent(content) {
+  const normalized = String(content || '').replace(/\s+/g, '').trim();
+  if (!normalized) return true;
+  const signals = [
+    '本句没有新增生词',
+    '没有新增生词',
+    '无新增生词',
+    '无生词',
+    '无新增词汇'
+  ];
+  return signals.some(signal => normalized.includes(signal));
 }
 
 function cleanJsonText(text) {
