@@ -4,6 +4,8 @@ import { ensureLearnerName } from './nav.js';
 
 let currentRecord = null;
 let template = '';
+let coverImageDataUrl = '';
+const DEFAULT_COVER_IMAGE_PATH = '/assets/xiaohongshu/cover-default.png';
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -38,6 +40,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('copyTextBtn').addEventListener('click', copyText);
   document.getElementById('generateImageBtn').addEventListener('click', generateImages);
+
+  const coverInput = document.getElementById('coverImageInput');
+  const coverPreview = document.getElementById('coverImagePreview');
+  const clearCoverBtn = document.getElementById('clearCoverImageBtn');
+  if (coverPreview) {
+    coverPreview.style.backgroundImage = `url('${DEFAULT_COVER_IMAGE_PATH}')`;
+  }
+  if (coverInput) {
+    coverInput.addEventListener('change', async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) {
+        coverImageDataUrl = '';
+        if (coverPreview) coverPreview.style.backgroundImage = `url('${DEFAULT_COVER_IMAGE_PATH}')`;
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        coverImageDataUrl = '';
+        if (coverPreview) coverPreview.style.backgroundImage = `url('${DEFAULT_COVER_IMAGE_PATH}')`;
+        return;
+      }
+      try {
+        coverImageDataUrl = await readFileAsDataUrl(file);
+        if (coverPreview) coverPreview.style.backgroundImage = `url('${coverImageDataUrl}')`;
+      } catch (error) {
+        coverImageDataUrl = '';
+        if (coverPreview) coverPreview.style.backgroundImage = `url('${DEFAULT_COVER_IMAGE_PATH}')`;
+        console.error('Cover image load failed:', error);
+      }
+    });
+  }
+  if (clearCoverBtn && coverInput) {
+    clearCoverBtn.addEventListener('click', () => {
+      coverInput.value = '';
+      coverImageDataUrl = '';
+      if (coverPreview) coverPreview.style.backgroundImage = `url('${DEFAULT_COVER_IMAGE_PATH}')`;
+    });
+  }
 });
 
 function triggerSearch() {
@@ -157,6 +196,15 @@ function copyText() {
   setTimeout(() => btn.textContent = original, 2000);
 }
 
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('读取失败'));
+    reader.readAsDataURL(file);
+  });
+}
+
 async function generateImages() {
   if (!currentRecord) return;
   
@@ -179,11 +227,29 @@ async function generateImages() {
   
   try {
     const style = document.querySelector('input[name="cardStyle"]:checked').value;
+    const coverInput = document.getElementById('coverImageInput');
+    let resolvedCoverUrl = coverImageDataUrl;
+    if ((!resolvedCoverUrl || resolvedCoverUrl.length === 0) && coverInput && coverInput.files && coverInput.files[0]) {
+      status.textContent = '正在读取封面图...';
+      try {
+        const file = coverInput.files[0];
+        if (!file.type.startsWith('image/')) {
+          throw new Error('封面图格式不支持');
+        }
+        resolvedCoverUrl = await readFileAsDataUrl(file);
+        coverImageDataUrl = resolvedCoverUrl;
+      } catch (error) {
+        resolvedCoverUrl = '';
+        coverImageDataUrl = '';
+        status.textContent = '封面图读取失败，使用默认封面';
+      }
+    }
     
     const processedRecord = {
       ...currentRecord,
       生词: parseVocab(currentRecord['生词']),
-      错误记录: parseErrors(currentRecord['错误记录'])
+      错误记录: parseErrors(currentRecord['错误记录']),
+      coverImageUrl: resolvedCoverUrl
     };
     
     const imageUrls = await generateAllCards(processedRecord, style, (msg) => {

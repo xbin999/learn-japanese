@@ -681,6 +681,12 @@
                     <span>Knowledge (知识)</span>
                   </label>
                 </div>
+                <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                  <span style="color: #555; font-size: 0.9rem;">封面图</span>
+                  <input type="file" id="coverImageInput" accept="image/*" style="max-width: 220px;">
+                  <button id="clearCoverImageBtn" class="secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">恢复默认</button>
+                  <div id="coverImagePreview" style="width: 48px; height: 48px; border-radius: 12px; background: #f1f1f1; border: 1px solid #e5e5e5; background-size: cover; background-position: center;"></div>
+                </div>
                 <button id="generateImageBtn" class="image-generate">生成分享图片</button>
                 
                 <div id="imageResult" style="display: none;">

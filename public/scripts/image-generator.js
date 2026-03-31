@@ -44,6 +44,9 @@ const STYLES = {
   }
 };
 
+const COVER_IMAGE_SIZE = 640;
+const DEFAULT_COVER_IMAGE_PATH = '/assets/xiaohongshu/cover-default.png';
+
 /**
  * 计算 Day X
  */
@@ -53,6 +56,16 @@ export function calculateDayNumber() {
   const diffTime = Math.abs(today - startDate);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
   return diffDays || 1;
+}
+
+function getCoverImageUrl(customUrl) {
+  if (customUrl) {
+    return customUrl;
+  }
+  if (typeof window !== 'undefined' && window.location) {
+    return new URL(DEFAULT_COVER_IMAGE_PATH, window.location.origin).toString();
+  }
+  return DEFAULT_COVER_IMAGE_PATH;
 }
 
 /**
@@ -67,14 +80,14 @@ export function generateCardHTML(expressionData, cardIndex, styleName = 'linear'
     throw new Error('expressionData 不能为空');
   }
   
-  const { 分享标题, 进化过程, 最终定稿, 本次核心结构, 表达升级点, 学习总结, 错误记录, 生词, 我想表达 } = expressionData;
+  const { 分享标题, 进化过程, 最终定稿, 本次核心结构, 表达升级点, 学习总结, 错误记录, 生词, 我想表达, coverImageUrl } = expressionData;
   
   const versions = parseEvolutionProcess(进化过程);
   
   let contentHTML = '';
   switch (cardIndex) {
     case 1:
-      contentHTML = generateCoverCard(分享标题 || '日语表达学习记录', styleName);
+      contentHTML = generateCoverCard(分享标题 || '日语表达学习记录', styleName, coverImageUrl);
       break;
     case 2:
       contentHTML = generateStartingCard(versions.v1, versions.v2, styleName, 我想表达);
@@ -121,18 +134,22 @@ function parseEvolutionProcess(evolutionText) {
 /**
  * 生成封面卡片HTML
  */
-function generateCoverCard(shareTitle, styleName) {
+function generateCoverCard(shareTitle, styleName, coverImageUrl) {
   const dayNumber = calculateDayNumber();
   const dayText = `日语表达升级练习 Day ${dayNumber}`;
   const mainTitle = shareTitle || '日语表达学习记录';
+  const finalCoverImageUrl = getCoverImageUrl(coverImageUrl);
   
   if (styleName === 'linear') {
     return `
-      <div class="card-content">
+      <div class="card-content cover-card">
         <div class="linear-header">
           <div class="linear-tag">${escapeHtml(dayText)}</div>
         </div>
-        <div class="linear-main" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+        <div class="cover-visual">
+          <div class="cover-image" style="background-image: url('${finalCoverImageUrl}')"></div>
+        </div>
+        <div class="cover-title">
           <h1 class="linear-title">${escapeHtml(mainTitle)}</h1>
         </div>
         <div class="linear-footer">
@@ -142,13 +159,20 @@ function generateCoverCard(shareTitle, styleName) {
     `;
   } else {
     return `
-      <div class="knowledge-card">
+      <div class="knowledge-card cover-card">
         <div class="knowledge-header">
           <span class="knowledge-tag">${escapeHtml(dayText)}</span>
         </div>
-        <div class="knowledge-body centered">
-          <h1 class="knowledge-title">${escapeHtml(mainTitle)}</h1>
-          <div class="knowledge-decoration">🇯🇵</div>
+        <div class="knowledge-body cover-body">
+          <div class="cover-visual">
+            <div class="cover-image" style="background-image: url('${finalCoverImageUrl}')"></div>
+          </div>
+          <div class="cover-title">
+            <h1 class="knowledge-title">${escapeHtml(mainTitle)}</h1>
+          </div>
+        </div>
+        <div class="knowledge-footer">
+          <div class="knowledge-brand">乐爸学日语</div>
         </div>
       </div>
     `;
@@ -557,6 +581,32 @@ function generateCSS(styleName) {
         opacity: 0.6;
         text-align: right;
       }
+
+      .cover-visual {
+        display: flex;
+        justify-content: center;
+        margin: 28px 0 32px;
+      }
+
+      .cover-image {
+        width: ${COVER_IMAGE_SIZE}px;
+        aspect-ratio: 1;
+        border-radius: 20px;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-color: #F0F2F5;
+        border: 1px solid ${style.colors.border};
+      }
+
+      .cover-title {
+        text-align: center;
+        margin-bottom: 16px;
+      }
+
+      .cover-card .linear-footer {
+        margin-top: 32px;
+      }
     `;
   } 
   else {
@@ -602,6 +652,12 @@ function generateCSS(styleName) {
       
       .knowledge-body.centered {
         justify-content: center;
+        text-align: center;
+      }
+
+      .knowledge-body.cover-body {
+        justify-content: flex-start;
+        align-items: center;
         text-align: center;
       }
       
@@ -734,6 +790,45 @@ function generateCSS(styleName) {
         margin-top: 40px;
         opacity: 0.2;
       }
+
+      .knowledge-footer {
+        margin-top: auto;
+        border-top: 1px solid #EFEFEF;
+        padding-top: 20px;
+      }
+
+      .knowledge-brand {
+        font-size: 24px;
+        color: ${style.colors.accent};
+        opacity: 0.7;
+        text-align: right;
+      }
+
+      .cover-visual {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0 28px;
+      }
+
+      .cover-image {
+        width: ${COVER_IMAGE_SIZE}px;
+        aspect-ratio: 1;
+        border-radius: 24px;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-color: #F4F4F4;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+      }
+
+      .cover-title {
+        text-align: center;
+        margin-bottom: 12px;
+      }
+
+      .cover-card .knowledge-footer {
+        margin-top: 24px;
+      }
     `;
   }
   
@@ -778,6 +873,35 @@ async function htmlToImage(html, width, height) {
         cleanup();
       };
 
+      const waitForImages = (doc, timeoutMs = 8000) => {
+        const images = Array.from(doc.images || []);
+        if (images.length === 0) {
+          return Promise.resolve();
+        }
+        return new Promise(resolve => {
+          let resolved = false;
+          let remaining = images.length;
+          const finish = () => {
+            if (resolved) return;
+            resolved = true;
+            resolve();
+          };
+          const onDone = () => {
+            remaining -= 1;
+            if (remaining <= 0) finish();
+          };
+          images.forEach(img => {
+            if (img.complete && img.naturalWidth > 0) {
+              onDone();
+            } else {
+              img.addEventListener('load', onDone, { once: true });
+              img.addEventListener('error', onDone, { once: true });
+            }
+          });
+          setTimeout(finish, timeoutMs);
+        });
+      };
+
       const startRender = async () => {
         if (settled || renderStarted) return;
         renderStarted = true;
@@ -787,7 +911,8 @@ async function htmlToImage(html, width, height) {
             return;
           }
           
-          await new Promise(r => setTimeout(r, 500));
+          await waitForImages(iframeDoc, 8000);
+          await new Promise(r => setTimeout(r, 300));
           
           const canvasPromise = html2canvas(iframeDoc.body, {
             width: width,
@@ -800,7 +925,7 @@ async function htmlToImage(html, width, height) {
           });
 
           const timeoutPromise = new Promise((_, rejectTimeout) => 
-            setTimeout(() => rejectTimeout(new Error('Image generation timed out')), 10000)
+            setTimeout(() => rejectTimeout(new Error('Image generation timed out')), 15000)
           );
 
           const canvas = await Promise.race([canvasPromise, timeoutPromise]);
@@ -830,13 +955,13 @@ async function htmlToImage(html, width, height) {
 
       setTimeout(() => {
         startRender();
-      }, 700);
+      }, 900);
 
       setTimeout(() => {
         if (!settled) {
           rejectOnce(new Error('Iframe loading timed out'));
         }
-      }, 4000);
+      }, 10000);
     });
   } else {
     return new Promise(resolve => resolve(new Blob([''], { type: 'image/png' })));
