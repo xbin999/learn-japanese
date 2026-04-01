@@ -419,7 +419,9 @@ async function requestGemini({ apiKey, prompt }) {
   if (!apiKey) {
     throw new Error('Missing GEMINI_API_KEY');
   }
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+  const modelName = await resolveGeminiModelName({ apiKey, baseUrl });
+  const endpoint = `${baseUrl}/${modelName}:generateContent?key=${apiKey}`;
   const body = {
     contents: [
       { role: 'user', parts: [{ text: prompt }] }
@@ -444,6 +446,39 @@ async function requestGemini({ apiKey, prompt }) {
     throw new Error('Gemini response empty');
   }
   return parseJsonStrict(outputText);
+}
+
+async function resolveGeminiModelName({ apiKey, baseUrl }) {
+  const preferredModels = [
+    'models/gemini-1.5-flash',
+    'models/gemini-1.5-flash-latest',
+    'models/gemini-1.5-pro',
+    'models/gemini-1.5-pro-latest',
+    'models/gemini-1.0-pro'
+  ];
+  const res = await fetch(`${baseUrl}/models?key=${apiKey}`);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Gemini ListModels ${res.status}: ${text}`);
+  }
+  const data = await res.json();
+  const available = Array.isArray(data.models)
+    ? data.models
+        .filter(model => Array.isArray(model.supportedGenerationMethods) && model.supportedGenerationMethods.includes('generateContent'))
+        .map(model => model.name)
+    : [];
+
+  for (const modelName of preferredModels) {
+    if (available.includes(modelName)) {
+      return modelName;
+    }
+  }
+
+  if (available.length > 0) {
+    return available[0];
+  }
+
+  throw new Error('Gemini ListModels returned no generateContent model');
 }
 
 async function requestZhipu({ apiKey, prompt }) {
